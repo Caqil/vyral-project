@@ -1,0 +1,90 @@
+{
+  "name": "vyral-seo",
+  "version": "1.0.0",
+  "description": "Comprehensive SEO optimization plugin for Vyral CMS",
+  "author": "Vyral Team",
+  "homepage": "https://vyral.com/plugins/seo",
+  "vyralVersion": "^1.0.0",
+  "hooks": [
+    "content:before-render",
+    "frontend:head",
+    "admin:menu"
+  ],
+  "adminPages": [
+    {
+      "title": "SEO",
+      "slug": "seo",
+      "component": "SEOAdminPage",
+      "icon": "Search",
+      "order": 6
+    },
+    {
+      "title": "Meta Tags",
+      "slug": "seo/meta",
+      "component": "MetaTagsPage",
+      "parent": "seo"
+    },
+    {
+      "title": "Sitemap",
+      "slug": "seo/sitemap",
+      "component": "SitemapPage",
+      "parent": "seo"
+    }
+  ],
+  "routes": [
+    {
+      "path": "/sitemap.xml",
+      "component": "SitemapGenerator",
+      "method": "GET"
+    },
+    {
+      "path": "/robots.txt",
+      "component": "RobotsGenerator",
+      "method": "GET"
+    }
+  ],
+  "settings": [
+    {
+      "key": "default_meta_title",
+      "label": "Default Meta Title",
+      "type": "text",
+      "description": "Default title template for pages",
+      "group": "general"
+    },
+    {
+      "key": "meta_title_separator",
+      "label": "Title Separator",
+      "type": "select",
+      "default": "|",
+      "options": [
+        { "label": "| (pipe)", "value": "|" },
+        { "label": "- (dash)", "value": "-" },
+        { "label": "– (en dash)", "value": "–" },
+        { "label": "— (em dash)", "value": "—" }
+      ],
+      "group": "general"
+    },
+    {
+      "key": "enable_schema_markup",
+      "label": "Enable Schema Markup",
+      "type": "boolean",
+      "default": true,
+      "description": "Add structured data markup",
+      "group": "schema"
+    },
+    {
+      "key": "google_analytics_id",
+      "label": "Google Analytics ID",
+      "type": "text",
+      "description": "Google Analytics tracking ID (GA4)",
+      "group": "tracking"
+    },
+    {
+      "key": "google_site_verification",
+      "label": "Google Site Verification",
+      "type": "text",
+      "description": "Google Search Console verification code",
+      "group": "verification"
+    }
+  ]
+}

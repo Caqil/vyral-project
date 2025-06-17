@@ -1,0 +1,65 @@
+{
+  "name": "vyral-analytics",
+  "version": "1.0.0",
+  "description": "Advanced analytics and tracking plugin for Vyral CMS",
+  "author": "Vyral Team",
+  "vyralVersion": "^1.0.0",
+  "hooks": [
+    "frontend:head",
+    "content:after-render",
+    "admin:dashboard-widgets"
+  ],
+  "adminPages": [
+    {
+      "title": "Analytics",
+      "slug": "analytics",
+      "component": "AnalyticsAdminPage",
+      "icon": "BarChart3",
+      "order": 7
+    }
+  ],
+  "routes": [
+    {
+      "path": "/api/plugins/analytics/track",
+      "component": "AnalyticsAPI",
+      "method": "POST"
+    }
+  ],
+  "settings": [
+    {
+      "key": "google_analytics_id",
+      "label": "Google Analytics ID",
+      "type": "text",
+      "description": "Google Analytics 4 measurement ID",
+      "group": "google"
+    },
+    {
+      "key": "enable_page_tracking",
+      "label": "Enable Page Tracking",
+      "type": "boolean",
+      "default": true,
+      "group": "tracking"
+    },
+    {
+      "key": "enable_event_tracking",
+      "label": "Enable Event Tracking",
+      "type": "boolean",
+      "default": true,
+      "group": "tracking"
+    },
+    {
+      "key": "track_downloads",
+      "label": "Track Downloads",
+      "type": "boolean",
+      "default": true,
+      "group": "events"
+    },
+    {
+      "key": "track_external_links",
+      "label": "Track External Links",
+      "type": "boolean",
+      "default": true,
+      "group": "events"
+    }
+  ]
+}

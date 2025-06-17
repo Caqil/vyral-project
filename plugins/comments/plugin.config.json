@@ -1,0 +1,101 @@
+{
+  "name": "vyral-comments",
+  "version": "1.0.0",
+  "description": "Advanced commenting system with moderation, threading, and spam protection",
+  "author": "Vyral Team",
+  "homepage": "https://vyral.com/plugins/comments",
+  "vyralVersion": "^1.0.0",
+  "hooks": [
+    "content:after-render",
+    "admin:menu",
+    "admin:dashboard-widgets"
+  ],
+  "adminPages": [
+    {
+      "title": "Comments",
+      "slug": "comments",
+      "component": "CommentsAdminPage",
+      "icon": "MessageSquare",
+      "order": 5
+    },
+    {
+      "title": "Comment Settings",
+      "slug": "comment-settings",
+      "component": "CommentSettingsPage",
+      "icon": "Settings",
+      "parent": "comments"
+    }
+  ],
+  "routes": [
+    {
+      "path": "/api/plugins/comments",
+      "component": "CommentsAPI",
+      "method": "GET"
+    },
+    {
+      "path": "/api/plugins/comments",
+      "component": "CommentsAPI",
+      "method": "POST"
+    },
+    {
+      "path": "/api/plugins/comments/:id/approve",
+      "component": "CommentsAPI",
+      "method": "PUT",
+      "permission": "moderate_comments"
+    }
+  ],
+  "settings": [
+    {
+      "key": "enable_comments",
+      "label": "Enable Comments",
+      "type": "boolean",
+      "default": true,
+      "description": "Allow visitors to post comments",
+      "group": "general"
+    },
+    {
+      "key": "require_moderation",
+      "label": "Require Moderation",
+      "type": "boolean",
+      "default": true,
+      "description": "Comments must be approved before appearing",
+      "group": "moderation"
+    },
+    {
+      "key": "max_comment_length",
+      "label": "Maximum Comment Length",
+      "type": "number",
+      "default": 1000,
+      "description": "Maximum number of characters allowed",
+      "group": "validation"
+    },
+    {
+      "key": "allow_guest_comments",
+      "label": "Allow Guest Comments",
+      "type": "boolean",
+      "default": true,
+      "description": "Allow non-registered users to comment",
+      "group": "permissions"
+    },
+    {
+      "key": "spam_filter_enabled",
+      "label": "Enable Spam Filter",
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically filter spam comments",
+      "group": "spam"
+    },
+    {
+      "key": "notification_email",
+      "label": "Notification Email",
+      "type": "text",
+      "description": "Email address for comment notifications",
+      "group": "notifications"
+    }
+  ],
+  "permissions": [
+    "moderate_comments",
+    "delete_comments",
+    "view_pending_comments"
+  ]
+}
