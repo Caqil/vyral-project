@@ -7,6 +7,6 @@ export * from './errors';
 export * from './constants';
 
 // Re-export commonly used utilities
-export { default as Database } from './database/connection';
-export { default as CacheManager } from './utils/cache';
-export { default as Logger } from './utils/logger';
+export { default as Database } from '../src/database/connection';
+export { default as CacheManager } from '../src/utils/cache';
+export { default as Logger } from '../src/utils/logger';
