@@ -1,11 +1,104 @@
+import { ValidationError } from '@vyral/core';
 import { z } from 'zod';
-import { PluginConfig, PluginConfigSchema } from '../types';
 
 export interface ValidationResult<T = any> {
   success: boolean;
   data?: T;
   error?: z.ZodError;
 }
+
+export function validateData<T>(schema: z.ZodSchema<T>, data: unknown): T {
+  try {
+    return schema.parse(data);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const formattedErrors = error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+        code: err.code
+      }));
+      throw new ValidationError('Validation failed', formattedErrors);
+    }
+    throw error;
+  }
+}
+
+export function validatePartialData<T extends z.ZodRawShape>(
+  schema: z.ZodObject<T>,
+  data: unknown
+): Partial<z.infer<z.ZodObject<T>>> {
+  try {
+    return schema.partial().parse(data);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const formattedErrors = error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+        code: err.code
+      }));
+      throw new ValidationError('Validation failed', formattedErrors);
+    }
+    throw error;
+  }
+}
+
+// Plugin config validation schemas
+const PluginConfigSchema = z.object({
+  name: z.string().min(1).regex(/^[a-z0-9-]+$/, 'Plugin name must be lowercase with hyphens'),
+  version: z.string().regex(/^\d+\.\d+\.\d+$/, 'Version must follow semver format'),
+  description: z.string().min(1).max(500),
+  author: z.string().min(1),
+  homepage: z.string().url().optional(),
+  repository: z.string().url().optional(),
+  license: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  vyralVersion: z.string().regex(/^[\^~]?\d+\.\d+\.\d+$/, 'Invalid Vyral version constraint'),
+  dependencies: z.record(z.string()).optional(),
+  peerDependencies: z.record(z.string()).optional(),
+  hooks: z.array(z.string()).optional(),
+  routes: z.array(z.object({
+    path: z.string(),
+    component: z.string(),
+    method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']).optional(),
+    middleware: z.array(z.string()).optional(),
+    permission: z.string().optional()
+  })).optional(),
+  adminPages: z.array(z.object({
+    title: z.string(),
+    slug: z.string(),
+    component: z.string(),
+    icon: z.string().optional(),
+    parent: z.string().optional(),
+    permission: z.string().optional(),
+    order: z.number().optional()
+  })).optional(),
+  settings: z.array(z.object({
+    key: z.string(),
+    label: z.string(),
+    type: z.enum(['text', 'textarea', 'number', 'boolean', 'select', 'file', 'color', 'date']),
+    default: z.any().optional(),
+    options: z.array(z.object({
+      label: z.string(),
+      value: z.any()
+    })).optional(),
+    required: z.boolean().optional(),
+    description: z.string().optional(),
+    validation: z.record(z.any()).optional(),
+    group: z.string().optional()
+  })).optional(),
+  assets: z.array(z.object({
+    type: z.enum(['css', 'js']),
+    file: z.string(),
+    condition: z.string().optional(),
+    priority: z.number().optional(),
+    async: z.boolean().optional(),
+    defer: z.boolean().optional()
+  })).optional(),
+  permissions: z.array(z.string()).optional(),
+  translations: z.record(z.record(z.string())).optional()
+});
+
+export type PluginConfig = z.infer<typeof PluginConfigSchema>;
 
 export function validatePluginConfig(config: unknown): ValidationResult<PluginConfig> {
   try {
@@ -36,105 +129,11 @@ export function createValidator<T>(schema: z.ZodSchema<T>) {
 }
 
 // Common validation schemas
+export const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
+export const emailSchema = z.string().email('Invalid email address');
+export const urlSchema = z.string().url('Invalid URL');
+export const slugSchema = z.string().regex(/^[a-z0-9-]+$/, 'Invalid slug format');
 export const EmailSchema = z.string().email();
 export const UrlSchema = z.string().url();
 export const SlugSchema = z.string().regex(/^[a-z0-9-]+$/);
 export const SemverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
-
-// packages/plugin-sdk/src/utils/string-utils.ts
-export function slugify(text: string, options: { lowercase?: boolean; strict?: boolean } = {}): string {
-  const { lowercase = true, strict = true } = options;
-
-  let result = text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-    .replace(/[^\w\s-]/g, strict ? '' : '_') // Remove special chars
-    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
-    .replace(/^-+|-+$/g, ''); // Trim hyphens
-
-  if (lowercase) {
-    result = result.toLowerCase();
-  }
-
-  return result;
-}
-
-export function camelCase(str: string): string {
-  return str
-    .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => 
-      index === 0 ? word.toLowerCase() : word.toUpperCase()
-    )
-    .replace(/\s+/g, '');
-}
-
-export function pascalCase(str: string): string {
-  return str
-    .replace(/(?:^\w|[A-Z]|\b\w)/g, word => word.toUpperCase())
-    .replace(/\s+/g, '');
-}
-
-export function kebabCase(str: string): string {
-  return str
-    .replace(/([a-z])([A-Z])/g, '$1-$2')
-    .replace(/[\s_]+/g, '-')
-    .toLowerCase();
-}
-
-export function snakeCase(str: string): string {
-  return str
-    .replace(/([a-z])([A-Z])/g, '$1_$2')
-    .replace(/[\s-]+/g, '_')
-    .toLowerCase();
-}
-
-export function truncate(text: string, length: number, suffix: string = '...'): string {
-  if (text.length <= length) return text;
-  return text.slice(0, length - suffix.length) + suffix;
-}
-
-export function escapeHtml(text: string): string {
-  const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  };
-
-  return text.replace(/[&<>"']/g, char => map[char]);
-}
-
-export function unescapeHtml(text: string): string {
-  const map: Record<string, string> = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-  };
-
-  return text.replace(/&(amp|lt|gt|quot|#39);/g, entity => map[entity]);
-}
-
-export function generateId(length: number = 8): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-export function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}

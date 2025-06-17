@@ -232,20 +232,20 @@ export class CategoryService extends BaseService<CategoryDocument> {
     return updatedCategory;
   }
 
-  private async wouldCreateCircularReference(categoryId: string, newParentId: string): Promise<boolean> {
-    let currentId = newParentId;
-    
-    while (currentId) {
-      if (currentId === categoryId) {
-        return true;
-      }
-      
-      const parent = await this.findById(currentId);
-      currentId = parent?.parent?.toString();
+private async wouldCreateCircularReference(categoryId: string, newParentId: string): Promise<boolean> {
+  let currentId: string | undefined = newParentId;
+
+  while (currentId) {
+    if (currentId === categoryId) {
+      return true;
     }
-    
-    return false;
+
+    const parent = await this.findById(currentId);
+    currentId = parent?.parent?.toString(); // No error since currentId allows undefined
   }
+
+  return false;
+}
 
   async deleteCategory(id: string, reassignToParent: boolean = false): Promise<void> {
     const category = await this.findByIdOrThrow(id);
@@ -326,23 +326,22 @@ export class CategoryService extends BaseService<CategoryDocument> {
     return categories;
   }
 
-  async getCategoryPath(categoryId: string): Promise<CategoryDocument[]> {
-    const path: CategoryDocument[] = [];
-    let currentId = categoryId;
+async getCategoryPath(categoryId: string): Promise<CategoryDocument[]> {
+  const path: CategoryDocument[] = [];
+  let currentId: string | null = categoryId;
 
-    while (currentId) {
-      const category = await this.findById(currentId, {
-        populate: { path: 'parent', select: 'name slug' }
-      });
-      
-      if (!category) break;
-      
-      path.unshift(category);
-      currentId = category.parent?._id?.toString();
+  while (currentId) {
+    const category = await this.findById(currentId); // No population needed
+    if (!category) {
+      break;
     }
 
-    return path;
+    path.unshift(category);
+    currentId = category.parent ? category.parent.toString() : null; // parent is a string or null
   }
+
+  return path;
+}
 
   async searchCategories(query: string, limit: number = 10): Promise<CategoryDocument[]> {
     const cacheKey = `categories:search:${query}:${limit}`;

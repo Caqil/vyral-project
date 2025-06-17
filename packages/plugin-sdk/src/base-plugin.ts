@@ -1,9 +1,10 @@
 import { EventEmitter } from 'events';
-import { PluginConfig, PluginContext, PluginHooks, HookPriority } from './types';
 import { Logger } from './utils';
+import { PluginConfig, PluginContext } from './types/plugin';
+import { HookPriority, PluginHooks } from './types/hooks';
 
 export abstract class BasePlugin extends EventEmitter {
-  public abstract config: PluginConfig;
+  public config: PluginConfig;
   protected context: PluginContext;
   protected logger: Logger;
   protected hooks: Map<keyof PluginHooks, Array<{ callback: Function; priority: HookPriority }>> = new Map();
@@ -11,8 +12,9 @@ export abstract class BasePlugin extends EventEmitter {
   protected routes: Map<string, any> = new Map();
   protected settings: Map<string, any> = new Map();
 
-  constructor(context: PluginContext) {
+  constructor(config: PluginConfig, context: PluginContext) {
     super();
+    this.config = config;
     this.context = context;
     this.logger = new Logger(this.config.name);
   }
@@ -171,25 +173,52 @@ export abstract class BasePlugin extends EventEmitter {
     this.logger.debug(`Updated setting: ${key}`);
   }
 
-  // Utility methods
-  protected getConfig(): PluginConfig {
+  // Public utility methods (accessible by PluginManager)
+  public getConfig(): PluginConfig {
     return this.config;
   }
 
-  protected getContext(): PluginContext {
+  public getContext(): PluginContext {
     return this.context;
   }
 
-  protected getHooks(): Map<keyof PluginHooks, Array<{ callback: Function; priority: HookPriority }>> {
+  // FIXED: Changed from protected to public for PluginManager access
+  public getHooks(): Map<keyof PluginHooks, Array<{ callback: Function; priority: HookPriority }>> {
     return this.hooks;
   }
 
-  protected getComponents(): Map<string, any> {
+  public getComponents(): Map<string, any> {
     return this.components;
   }
 
-  protected getRoutes(): Map<string, any> {
+  public getRoutes(): Map<string, any> {
     return this.routes;
+  }
+
+  public getSettings(): Map<string, any> {
+    return new Map(this.settings); // Return a copy to prevent external modification
+  }
+
+  // Additional public methods for plugin introspection
+  public hasHook<K extends keyof PluginHooks>(hookName: K): boolean {
+    return this.hooks.has(hookName) && this.hooks.get(hookName)!.length > 0;
+  }
+
+  public getHookCount(): number {
+    return Array.from(this.hooks.values()).reduce((total, hooks) => total + hooks.length, 0);
+  }
+
+  public getComponentNames(): string[] {
+    return Array.from(this.components.keys());
+  }
+
+  public getRouteKeys(): string[] {
+    return Array.from(this.routes.keys());
+  }
+
+  public getStatus(): 'active' | 'inactive' | 'error' {
+    // This could be enhanced to track actual status
+    return 'active'; // Default implementation
   }
 
   // Error handling

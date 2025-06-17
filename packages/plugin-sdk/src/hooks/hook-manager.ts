@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
-import { PluginHooks, HookRegistration, HookPriority, HookContext, HookResult } from '../types';
-import { Logger } from '../utils';
+import { Logger } from '../utils/logger';
+import { HookContext, HookPriority, HookRegistration, HookResult, PluginHooks } from '../types/hooks';
 
 export class HookManager extends EventEmitter {
   private hooks: Map<keyof PluginHooks, HookRegistration[]> = new Map();

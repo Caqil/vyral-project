@@ -1,13 +1,5 @@
-"use client";
-
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -15,7 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -24,82 +18,541 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { Save, Globe, Mail, Shield, Database, Palette } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Save,
+  Upload,
+  Trash2,
+  Eye,
+  Globe,
+  Users,
+  Shield,
+  Mail,
+  Database,
+  Server,
+  Palette,
+  Search,
+  Zap,
+  FileText,
+} from "lucide-react";
 
-const generalSettingsSchema = z.object({
-  site_title: z.string().min(1, "Site title is required"),
-  site_description: z.string().max(500, "Description too long"),
-  site_url: z.string().url("Invalid URL").optional().or(z.literal("")),
-  timezone: z.string(),
-  date_format: z.string(),
-  time_format: z.string(),
-});
+interface Settings {
+  general: {
+    siteName: string;
+    siteDescription: string;
+    siteUrl: string;
+    language: string;
+    timezone: string;
+    dateFormat: string;
+    timeFormat: string;
+    weekStartsOn: string;
+  };
+  content: {
+    postsPerPage: number;
+    allowComments: boolean;
+    moderateComments: boolean;
+    requireLogin: boolean;
+    defaultPostStatus: string;
+    defaultCategory: string;
+    enableRevisions: boolean;
+    revisionsToKeep: number;
+  };
+  media: {
+    maxFileSize: number;
+    allowedFileTypes: string[];
+    imageQuality: number;
+    generateThumbnails: boolean;
+    thumbnailSizes: Array<{ name: string; width: number; height: number }>;
+  };
+  seo: {
+    enableSitemap: boolean;
+    enableRobots: boolean;
+    defaultMetaDescription: string;
+    socialImage: string;
+    googleAnalytics: string;
+    googleSearchConsole: string;
+  };
+  security: {
+    enableTwoFactor: boolean;
+    sessionTimeout: number;
+    maxLoginAttempts: number;
+    enableCaptcha: boolean;
+    allowUserRegistration: boolean;
+    defaultUserRole: string;
+  };
+  email: {
+    provider: string;
+    smtpHost: string;
+    smtpPort: number;
+    smtpUser: string;
+    smtpPassword: string;
+    fromEmail: string;
+    fromName: string;
+    enableEmailNotifications: boolean;
+  };
+  performance: {
+    enableCaching: boolean;
+    cacheExpiration: number;
+    enableCompression: boolean;
+    enableCdn: boolean;
+    cdnUrl: string;
+    enableLazyLoading: boolean;
+  };
+}
 
-const readingSettingsSchema = z.object({
-  posts_per_page: z.number().min(1).max(50),
-  show_excerpts: z.boolean(),
-  excerpt_length: z.number().min(10).max(500),
-  comment_status: z.enum(["open", "closed"]),
-  comment_moderation: z.boolean(),
-});
+async function getSettings(): Promise<Settings> {
+  // Simulate API call - replace with actual settings service
+  return {
+    general: {
+      siteName: "Vyral CMS",
+      siteDescription: "Modern, plugin-based content management system",
+      siteUrl: "https://vyral.com",
+      language: "en",
+      timezone: "America/New_York",
+      dateFormat: "YYYY-MM-DD",
+      timeFormat: "HH:mm",
+      weekStartsOn: "monday",
+    },
+    content: {
+      postsPerPage: 10,
+      allowComments: true,
+      moderateComments: true,
+      requireLogin: false,
+      defaultPostStatus: "draft",
+      defaultCategory: "uncategorized",
+      enableRevisions: true,
+      revisionsToKeep: 10,
+    },
+    media: {
+      maxFileSize: 10,
+      allowedFileTypes: ["jpg", "jpeg", "png", "gif", "pdf", "doc", "docx"],
+      imageQuality: 85,
+      generateThumbnails: true,
+      thumbnailSizes: [
+        { name: "thumbnail", width: 150, height: 150 },
+        { name: "medium", width: 300, height: 300 },
+        { name: "large", width: 800, height: 600 },
+      ],
+    },
+    seo: {
+      enableSitemap: true,
+      enableRobots: true,
+      defaultMetaDescription: "Powered by Vyral CMS",
+      socialImage: "",
+      googleAnalytics: "",
+      googleSearchConsole: "",
+    },
+    security: {
+      enableTwoFactor: false,
+      sessionTimeout: 24,
+      maxLoginAttempts: 5,
+      enableCaptcha: false,
+      allowUserRegistration: true,
+      defaultUserRole: "subscriber",
+    },
+    email: {
+      provider: "smtp",
+      smtpHost: "",
+      smtpPort: 587,
+      smtpUser: "",
+      smtpPassword: "",
+      fromEmail: "noreply@vyral.com",
+      fromName: "Vyral CMS",
+      enableEmailNotifications: true,
+    },
+    performance: {
+      enableCaching: true,
+      cacheExpiration: 3600,
+      enableCompression: true,
+      enableCdn: false,
+      cdnUrl: "",
+      enableLazyLoading: true,
+    },
+  };
+}
 
-type GeneralSettingsData = z.infer<typeof generalSettingsSchema>;
-type ReadingSettingsData = z.infer<typeof readingSettingsSchema>;
+function GeneralSettings({ settings }: { settings: Settings }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            Site Information
+          </CardTitle>
+          <CardDescription>
+            Basic information about your website
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="siteName">Site Name</Label>
+              <Input
+                id="siteName"
+                defaultValue={settings.general.siteName}
+                placeholder="Your Site Name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="siteUrl">Site URL</Label>
+              <Input
+                id="siteUrl"
+                defaultValue={settings.general.siteUrl}
+                placeholder="https://yoursite.com"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="siteDescription">Site Description</Label>
+            <Textarea
+              id="siteDescription"
+              defaultValue={settings.general.siteDescription}
+              placeholder="A brief description of your site"
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Localization</CardTitle>
+          <CardDescription>Language and regional settings</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="language">Language</Label>
+              <Select defaultValue={settings.general.language}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="timezone">Timezone</Label>
+              <Select defaultValue={settings.general.timezone}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="America/New_York">Eastern Time</SelectItem>
+                  <SelectItem value="America/Chicago">Central Time</SelectItem>
+                  <SelectItem value="America/Denver">Mountain Time</SelectItem>
+                  <SelectItem value="America/Los_Angeles">
+                    Pacific Time
+                  </SelectItem>
+                  <SelectItem value="UTC">UTC</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ContentSettings({ settings }: { settings: Settings }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Content Display
+          </CardTitle>
+          <CardDescription>
+            Configure how content is displayed on your site
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="postsPerPage">Posts per page</Label>
+              <Input
+                id="postsPerPage"
+                type="number"
+                defaultValue={settings.content.postsPerPage}
+                min="1"
+                max="100"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="defaultPostStatus">Default post status</Label>
+              <Select defaultValue={settings.content.defaultPostStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="pending">Pending Review</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Comments</Label>
+                <div className="text-sm text-muted-foreground">
+                  Allow visitors to comment on posts
+                </div>
+              </div>
+              <Switch defaultChecked={settings.content.allowComments} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Moderate comments</Label>
+                <div className="text-sm text-muted-foreground">
+                  Comments must be approved before appearing
+                </div>
+              </div>
+              <Switch defaultChecked={settings.content.moderateComments} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Post revisions</Label>
+                <div className="text-sm text-muted-foreground">
+                  Keep a history of post changes
+                </div>
+              </div>
+              <Switch defaultChecked={settings.content.enableRevisions} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SecuritySettings({ settings }: { settings: Settings }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Authentication & Security
+          </CardTitle>
+          <CardDescription>
+            Configure security settings for your site
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sessionTimeout">Session timeout (hours)</Label>
+              <Input
+                id="sessionTimeout"
+                type="number"
+                defaultValue={settings.security.sessionTimeout}
+                min="1"
+                max="168"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxLoginAttempts">Max login attempts</Label>
+              <Input
+                id="maxLoginAttempts"
+                type="number"
+                defaultValue={settings.security.maxLoginAttempts}
+                min="1"
+                max="10"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Two-factor authentication</Label>
+                <div className="text-sm text-muted-foreground">
+                  Require 2FA for admin users
+                </div>
+              </div>
+              <Switch defaultChecked={settings.security.enableTwoFactor} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Enable CAPTCHA</Label>
+                <div className="text-sm text-muted-foreground">
+                  Add CAPTCHA to login and registration forms
+                </div>
+              </div>
+              <Switch defaultChecked={settings.security.enableCaptcha} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>User registration</Label>
+                <div className="text-sm text-muted-foreground">
+                  Allow new users to register
+                </div>
+              </div>
+              <Switch
+                defaultChecked={settings.security.allowUserRegistration}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function PerformanceSettings({ settings }: { settings: Settings }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Performance Optimization
+          </CardTitle>
+          <CardDescription>
+            Configure caching and performance settings
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Enable caching</Label>
+                <div className="text-sm text-muted-foreground">
+                  Cache pages and content for faster loading
+                </div>
+              </div>
+              <Switch defaultChecked={settings.performance.enableCaching} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Enable compression</Label>
+                <div className="text-sm text-muted-foreground">
+                  Compress CSS, JS, and HTML files
+                </div>
+              </div>
+              <Switch defaultChecked={settings.performance.enableCompression} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Lazy loading</Label>
+                <div className="text-sm text-muted-foreground">
+                  Load images only when they come into view
+                </div>
+              </div>
+              <Switch defaultChecked={settings.performance.enableLazyLoading} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Content Delivery Network</Label>
+                <div className="text-sm text-muted-foreground">
+                  Use CDN for static assets
+                </div>
+              </div>
+              <Switch defaultChecked={settings.performance.enableCdn} />
+            </div>
+          </div>
+
+          {settings.performance.enableCdn && (
+            <div className="space-y-2">
+              <Label htmlFor="cdnUrl">CDN URL</Label>
+              <Input
+                id="cdnUrl"
+                defaultValue={settings.performance.cdnUrl}
+                placeholder="https://cdn.yoursite.com"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SettingsSkeleton() {
+  return (
+    <div className="space-y-6">
+      {[...Array(2)].map((_, i) => (
+        <Card key={i}>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-60" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Skeleton className="h-10" />
+              <Skeleton className="h-10" />
+            </div>
+            <Skeleton className="h-20" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+async function SettingsContent() {
+  const settings = await getSettings();
+
+  return (
+    <Tabs defaultValue="general" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="general">General</TabsTrigger>
+        <TabsTrigger value="content">Content</TabsTrigger>
+        <TabsTrigger value="security">Security</TabsTrigger>
+        <TabsTrigger value="performance">Performance</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="general">
+        <GeneralSettings settings={settings} />
+      </TabsContent>
+
+      <TabsContent value="content">
+        <ContentSettings settings={settings} />
+      </TabsContent>
+
+      <TabsContent value="security">
+        <SecuritySettings settings={settings} />
+      </TabsContent>
+
+      <TabsContent value="performance">
+        <PerformanceSettings settings={settings} />
+      </TabsContent>
+
+      <div className="flex justify-end">
+        <Button>
+          <Save className="h-4 w-4 mr-2" />
+          Save Changes
+        </Button>
+      </div>
+    </Tabs>
+  );
+}
 
 export default function AdminSettingsPage() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const generalForm = useForm<GeneralSettingsData>({
-    resolver: zodResolver(generalSettingsSchema),
-    defaultValues: {
-      site_title: "Vyral CMS",
-      site_description: "A modern, plugin-based content management system",
-      site_url: "",
-      timezone: "UTC",
-      date_format: "YYYY-MM-DD",
-      time_format: "24h",
-    },
-  });
-
-  const readingForm = useForm<ReadingSettingsData>({
-    resolver: zodResolver(readingSettingsSchema),
-    defaultValues: {
-      posts_per_page: 10,
-      show_excerpts: true,
-      excerpt_length: 160,
-      comment_status: "open",
-      comment_moderation: true,
-    },
-  });
-
-  const onSubmitGeneral = async (data: GeneralSettingsData) => {
-    setIsLoading(true);
-    try {
-      // API call would go here
-      console.log("General settings:", data);
-      toast.success("General settings saved successfully!");
-    } catch (error) {
-      toast.error("Failed to save settings");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onSubmitReading = async (data: ReadingSettingsData) => {
-    setIsLoading(true);
-    try {
-      // API call would go here
-      console.log("Reading settings:", data);
-      toast.success("Reading settings saved successfully!");
-    } catch (error) {
-      toast.error("Failed to save settings");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -109,361 +562,9 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid grid-cols-6 w-full max-w-2xl">
-          <TabsTrigger value="general" className="flex items-center space-x-2">
-            <Globe className="h-4 w-4" />
-            <span className="hidden sm:block">General</span>
-          </TabsTrigger>
-          <TabsTrigger value="reading" className="flex items-center space-x-2">
-            <Database className="h-4 w-4" />
-            <span className="hidden sm:block">Reading</span>
-          </TabsTrigger>
-          <TabsTrigger value="writing" className="flex items-center space-x-2">
-            <Mail className="h-4 w-4" />
-            <span className="hidden sm:block">Writing</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="discussion"
-            className="flex items-center space-x-2"
-          >
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:block">Discussion</span>
-          </TabsTrigger>
-          <TabsTrigger value="media" className="flex items-center space-x-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:block">Media</span>
-          </TabsTrigger>
-          <TabsTrigger value="advanced" className="flex items-center space-x-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:block">Advanced</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="general">
-          <form
-            onSubmit={generalForm.handleSubmit(onSubmitGeneral)}
-            className="space-y-6"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Site Identity</CardTitle>
-                <CardDescription>
-                  Basic information about your website
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="site_title">Site Title</Label>
-                  <Input
-                    id="site_title"
-                    {...generalForm.register("site_title")}
-                  />
-                  {generalForm.formState.errors.site_title && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {generalForm.formState.errors.site_title.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="site_description">Site Description</Label>
-                  <Textarea
-                    id="site_description"
-                    {...generalForm.register("site_description")}
-                    rows={3}
-                  />
-                  {generalForm.formState.errors.site_description && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {generalForm.formState.errors.site_description.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="site_url">Site URL</Label>
-                  <Input
-                    id="site_url"
-                    type="url"
-                    placeholder="https://example.com"
-                    {...generalForm.register("site_url")}
-                  />
-                  {generalForm.formState.errors.site_url && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {generalForm.formState.errors.site_url.message}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Localization</CardTitle>
-                <CardDescription>
-                  Date, time, and timezone settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      generalForm.setValue("timezone", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">
-                        Eastern Time
-                      </SelectItem>
-                      <SelectItem value="America/Chicago">
-                        Central Time
-                      </SelectItem>
-                      <SelectItem value="America/Denver">
-                        Mountain Time
-                      </SelectItem>
-                      <SelectItem value="America/Los_Angeles">
-                        Pacific Time
-                      </SelectItem>
-                      <SelectItem value="Europe/London">London</SelectItem>
-                      <SelectItem value="Europe/Paris">Paris</SelectItem>
-                      <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="date_format">Date Format</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      generalForm.setValue("date_format", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select date format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="YYYY-MM-DD">2024-01-15</SelectItem>
-                      <SelectItem value="MM/DD/YYYY">01/15/2024</SelectItem>
-                      <SelectItem value="DD/MM/YYYY">15/01/2024</SelectItem>
-                      <SelectItem value="MMM DD, YYYY">Jan 15, 2024</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="time_format">Time Format</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      generalForm.setValue("time_format", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="24h">24 hour (14:30)</SelectItem>
-                      <SelectItem value="12h">12 hour (2:30 PM)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            </div>
-          </form>
-        </TabsContent>
-
-        <TabsContent value="reading">
-          <form
-            onSubmit={readingForm.handleSubmit(onSubmitReading)}
-            className="space-y-6"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Reading Settings</CardTitle>
-                <CardDescription>
-                  Control how your content is displayed
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="posts_per_page">Posts per page</Label>
-                  <Input
-                    id="posts_per_page"
-                    type="number"
-                    min="1"
-                    max="50"
-                    {...readingForm.register("posts_per_page", {
-                      valueAsNumber: true,
-                    })}
-                  />
-                  {readingForm.formState.errors.posts_per_page && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {readingForm.formState.errors.posts_per_page.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="show_excerpts">Show excerpts</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Display excerpts instead of full content in post listings
-                    </p>
-                  </div>
-                  <Switch
-                    id="show_excerpts"
-                    onCheckedChange={(checked) =>
-                      readingForm.setValue("show_excerpts", checked)
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="excerpt_length">Excerpt length</Label>
-                  <Input
-                    id="excerpt_length"
-                    type="number"
-                    min="10"
-                    max="500"
-                    {...readingForm.register("excerpt_length", {
-                      valueAsNumber: true,
-                    })}
-                  />
-                  {readingForm.formState.errors.excerpt_length && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {readingForm.formState.errors.excerpt_length.message}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Comment Settings</CardTitle>
-                <CardDescription>
-                  Configure how comments work on your site
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="comment_status">Default comment status</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      readingForm.setValue("comment_status", value as any)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select comment status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="comment_moderation">
-                      Comment moderation
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Require approval before comments appear
-                    </p>
-                  </div>
-                  <Switch
-                    id="comment_moderation"
-                    onCheckedChange={(checked) =>
-                      readingForm.setValue("comment_moderation", checked)
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            </div>
-          </form>
-        </TabsContent>
-
-        <TabsContent value="writing">
-          <Card>
-            <CardHeader>
-              <CardTitle>Writing Settings</CardTitle>
-              <CardDescription>
-                Configure the writing and editing experience
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Writing settings coming soon...
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="discussion">
-          <Card>
-            <CardHeader>
-              <CardTitle>Discussion Settings</CardTitle>
-              <CardDescription>
-                Manage comments and user interactions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Discussion settings coming soon...
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="media">
-          <Card>
-            <CardHeader>
-              <CardTitle>Media Settings</CardTitle>
-              <CardDescription>
-                Configure media uploads and image sizes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Media settings coming soon...
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="advanced">
-          <Card>
-            <CardHeader>
-              <CardTitle>Advanced Settings</CardTitle>
-              <CardDescription>Advanced configuration options</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Advanced settings coming soon...
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Suspense fallback={<SettingsSkeleton />}>
+        <SettingsContent />
+      </Suspense>
     </div>
   );
 }

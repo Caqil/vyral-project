@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatDate, formatRelativeTime, readingTime } from "@/lib/utils";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Eye, User } from "lucide-react";
+import { formatRelativeTime } from '../../../../packages/plugin-sdk/src/utils/date-utils';
+import { readingTime } from "@/lib/utils";
 
 interface PostCardProps {
   post: {

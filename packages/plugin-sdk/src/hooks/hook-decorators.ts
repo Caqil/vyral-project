@@ -1,4 +1,5 @@
-import { HookPriority } from '../types';
+import { HookPriority } from "../types/hooks";
+
 
 // Decorator for hook registration
 export function Hook<K extends string>(

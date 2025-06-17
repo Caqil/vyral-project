@@ -8,10 +8,19 @@ import {
   PluginMetadata, 
   PluginInstallOptions,
   PluginContext,
-  PluginHooks
-} from './types';
-import { Logger } from './utils';
-import { validatePluginConfig } from './utils/validation';
+} from './types/plugin';
+import { Logger, validatePluginConfig } from './utils';
+import { PluginHooks } from './types/hooks';
+
+// Type for plugin constructor
+type PluginConstructor = new (context: PluginContext) => BasePlugin;
+
+// Type guard to check if something is a plugin constructor
+function isPluginConstructor(value: any): value is PluginConstructor {
+  return typeof value === 'function' && 
+         value.prototype && 
+         (value.prototype instanceof BasePlugin || value === BasePlugin);
+}
 
 export class PluginManager extends EventEmitter {
   private plugins: Map<string, PluginInstance> = new Map();
@@ -80,21 +89,21 @@ export class PluginManager extends EventEmitter {
       // Validate configuration
       const validationResult = validatePluginConfig(config);
       if (!validationResult.success) {
-        throw new Error(`Invalid plugin configuration: ${validationResult.error.message}`);
+        throw new Error(`Invalid plugin configuration: ${validationResult.error?.message}`);
       }
 
       // Check if plugin file exists
       try {
         await stat(indexPath);
       } catch {
-        this.logger.warn(`Plugin ${pluginId} not built. Run 'npm run build' in plugin directory.`);
+        this.logger.warn(`Plugin ${pluginId} not built. Skipping...`);
         return;
       }
 
-      // Create plugin instance
+      // Create plugin instance record
       const pluginInstance: PluginInstance = {
         id: pluginId,
-        config,
+        config: validationResult.data!,
         instance: null,
         hooks: new Map(),
         routes: new Map(),
@@ -113,37 +122,43 @@ export class PluginManager extends EventEmitter {
     }
   }
 
-  // Load plugin metadata
-  private async loadMetadata(): Promise<void> {
-    // Load metadata from database or cache
-    // This would typically fetch from a persistent store
-    this.logger.debug('Loaded plugin metadata');
-  }
-
   // Install a plugin
   public async installPlugin(options: PluginInstallOptions): Promise<string> {
-    this.logger.info('Installing plugin...', options);
+    this.logger.info(`Installing plugin from ${options.source}`);
     
     try {
       let pluginId: string;
       
       switch (options.source) {
         case 'registry':
-          pluginId = await this.installFromRegistry(options.url!);
+          if (!options.url) throw new Error('URL required for registry installation');
+          pluginId = await this.installFromRegistry(options.url);
           break;
+          
         case 'upload':
-          pluginId = await this.installFromUpload(options.file!);
+          if (!options.file) throw new Error('File required for upload installation');
+          pluginId = await this.installFromUpload(options.file);
           break;
+          
         case 'git':
-          pluginId = await this.installFromGit(options.url!);
+          if (!options.url) throw new Error('URL required for Git installation');
+          pluginId = await this.installFromGit(options.url);
           break;
+          
         case 'local':
-          pluginId = await this.installFromLocal(options.url!);
+          if (!options.url) throw new Error('Path required for local installation');
+          pluginId = await this.installFromLocal(options.url);
           break;
+          
         default:
           throw new Error(`Unsupported installation source: ${options.source}`);
       }
       
+      // Load the newly installed plugin
+      const pluginPath = join(this.pluginsDirectory, pluginId);
+      await this.loadPlugin(pluginId, pluginPath);
+      
+      // Activate if requested
       if (options.activate) {
         await this.activatePlugin(pluginId);
       }
@@ -152,46 +167,8 @@ export class PluginManager extends EventEmitter {
       this.logger.info(`Plugin installed successfully: ${pluginId}`);
       
       return pluginId;
-      
     } catch (error) {
       this.logger.error('Failed to install plugin:', error);
-      throw error;
-    }
-  }
-
-  // Uninstall a plugin
-  public async uninstallPlugin(pluginId: string): Promise<void> {
-    this.logger.info(`Uninstalling plugin: ${pluginId}`);
-    
-    try {
-      const plugin = this.plugins.get(pluginId);
-      if (!plugin) {
-        throw new Error(`Plugin not found: ${pluginId}`);
-      }
-
-      // Deactivate if active
-      if (plugin.status === 'activated') {
-        await this.deactivatePlugin(pluginId);
-      }
-
-      // Check for dependents
-      const dependents = this.getDependentPlugins(pluginId);
-      if (dependents.length > 0) {
-        throw new Error(`Cannot uninstall plugin. The following plugins depend on it: ${dependents.join(', ')}`);
-      }
-
-      // Remove plugin files
-      await this.removePluginFiles(pluginId);
-      
-      // Remove from memory
-      this.plugins.delete(pluginId);
-      this.metadata.delete(pluginId);
-      
-      this.emit('plugin-uninstalled', pluginId);
-      this.logger.info(`Plugin uninstalled successfully: ${pluginId}`);
-      
-    } catch (error) {
-      this.logger.error(`Failed to uninstall plugin ${pluginId}:`, error);
       throw error;
     }
   }
@@ -218,8 +195,13 @@ export class PluginManager extends EventEmitter {
       const context = this.createPluginContext(pluginId, plugin.config);
 
       // Load and instantiate plugin
-      const PluginClass = await this.loadPluginClass(pluginId);
-      const pluginInstance = new PluginClass(context);
+      const PluginClass: PluginConstructor = await this.loadPluginClass(pluginId);
+      const pluginInstance: BasePlugin = new PluginClass(context);
+
+      // Validate that the instance is actually a BasePlugin
+      if (!(pluginInstance instanceof BasePlugin)) {
+        throw new Error(`Plugin ${pluginId} does not extend BasePlugin`);
+      }
 
       // Activate the plugin
       await pluginInstance.activate();
@@ -227,7 +209,13 @@ export class PluginManager extends EventEmitter {
       // Update plugin instance
       plugin.instance = pluginInstance;
       plugin.status = 'activated';
-      plugin.hooks = pluginInstance.getHooks();
+      // Transform hooks to Map<string, Function[]>
+      const rawHooks = pluginInstance.getHooks();
+      const hooksMap = new Map<string, Function[]>();
+      for (const [hookName, arr] of rawHooks.entries()) {
+        hooksMap.set(String(hookName), arr.map(h => h.callback));
+      }
+      plugin.hooks = hooksMap;
       plugin.components = pluginInstance.getComponents();
       plugin.routes = pluginInstance.getRoutes();
 
@@ -270,7 +258,7 @@ export class PluginManager extends EventEmitter {
         return;
       }
 
-      // Check for dependents
+      // Check for dependent plugins
       const dependents = this.getActiveDependentPlugins(pluginId);
       if (dependents.length > 0) {
         throw new Error(`Cannot deactivate plugin. The following active plugins depend on it: ${dependents.join(', ')}`);
@@ -300,6 +288,32 @@ export class PluginManager extends EventEmitter {
       
     } catch (error) {
       this.logger.error(`Failed to deactivate plugin ${pluginId}:`, error);
+      throw error;
+    }
+  }
+
+  // Uninstall a plugin
+  public async uninstallPlugin(pluginId: string): Promise<void> {
+    this.logger.info(`Uninstalling plugin: ${pluginId}`);
+    
+    try {
+      // Deactivate first if active
+      if (this.isPluginActive(pluginId)) {
+        await this.deactivatePlugin(pluginId);
+      }
+
+      // Remove from memory
+      this.plugins.delete(pluginId);
+      this.metadata.delete(pluginId);
+
+      // Remove files
+      await this.removePluginFiles(pluginId);
+
+      this.emit('plugin-uninstalled', pluginId);
+      this.logger.info(`Plugin uninstalled successfully: ${pluginId}`);
+      
+    } catch (error) {
+      this.logger.error(`Failed to uninstall plugin ${pluginId}:`, error);
       throw error;
     }
   }
@@ -334,7 +348,7 @@ export class PluginManager extends EventEmitter {
   public async executeHook<K extends keyof PluginHooks>(
     hookName: K,
     ...args: Parameters<PluginHooks[K]>
-  ): Promise<any> {
+  ): Promise<any[]> {
     const results: any[] = [];
     const activePlugins = this.getActivePlugins();
     
@@ -342,7 +356,7 @@ export class PluginManager extends EventEmitter {
       const hookCallbacks = plugin.hooks.get(hookName);
       
       if (hookCallbacks && hookCallbacks.length > 0) {
-        for (const { callback } of hookCallbacks) {
+        for (const callback of hookCallbacks) {
           try {
             const result = await callback(...args);
             results.push(result);
@@ -352,13 +366,19 @@ export class PluginManager extends EventEmitter {
               break;
             }
           } catch (error) {
-            this.logger.error(`Error executing hook ${hookName} in plugin ${pluginId}:`, error);
+            this.logger.error(`Error executing hook ${String(hookName)} in plugin ${pluginId}:`, error);
           }
         }
       }
     }
     
     return results;
+  }
+
+  // Load metadata for all plugins
+  private async loadMetadata(): Promise<void> {
+    // Implementation for loading plugin metadata
+    this.logger.debug('Loading plugin metadata...');
   }
 
   // Helper methods
@@ -419,14 +439,26 @@ export class PluginManager extends EventEmitter {
     return this.getDependentPlugins(pluginId).filter(id => this.isPluginActive(id));
   }
 
-  private async loadPluginClass(pluginId: string): Promise<typeof BasePlugin> {
+  private async loadPluginClass(pluginId: string): Promise<PluginConstructor> {
     const pluginPath = join(this.pluginsDirectory, pluginId, 'dist', 'index.js');
     
-    // Dynamic import of the plugin
-    const pluginModule = await import(pluginPath);
-    
-    // Return the default export or a named export
-    return pluginModule.default || pluginModule[Object.keys(pluginModule)[0]];
+    try {
+      // Dynamic import of the plugin
+      const pluginModule = await import(pluginPath);
+      
+      // Get the plugin class (default export or first named export)
+      const PluginClass = pluginModule.default || pluginModule[Object.keys(pluginModule)[0]];
+      
+      // Validate that it's a constructor function
+      if (!isPluginConstructor(PluginClass)) {
+        throw new Error(`Plugin ${pluginId} does not export a valid plugin class that extends BasePlugin`);
+      }
+      
+      return PluginClass;
+    } catch (error) {
+      this.logger.error(`Failed to load plugin class for ${pluginId}:`, error);
+      throw new Error(`Failed to load plugin class: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private createPluginContext(pluginId: string, config: PluginConfig): PluginContext {

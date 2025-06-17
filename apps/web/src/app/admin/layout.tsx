@@ -11,7 +11,16 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  interface AdminUser {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    role?: string | null;
+  }
+
+  const session = await getServerSession(authOptions) as
+    | (Omit<Awaited<ReturnType<typeof getServerSession>>, 'user'> & { user: AdminUser })
+    | null;
 
   if (!session) {
     redirect('/auth/signin?callbackUrl=/admin');
@@ -19,7 +28,7 @@ export default async function AdminLayout({
 
   // Check if user has admin access
   const allowedRoles = ['super_admin', 'admin', 'editor'];
-  if (!allowedRoles.includes(session.user.role)) {
+  if (!session.user || !allowedRoles.includes(session.user.role ?? '')) {
     redirect('/');
   }
 

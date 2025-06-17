@@ -289,68 +289,68 @@ export class SettingService extends BaseService<SettingDocument> {
 
   // Initialize default settings
   async initializeDefaults(): Promise<void> {
-    const defaultSettings = [
-      {
-        key: 'site_title',
-        value: 'Vyral CMS',
-        type: 'string',
-        group: 'general',
-        label: 'Site Title',
-        description: 'The title of your website',
-        isPublic: true,
-        isAutoload: true
-      },
-      {
-        key: 'site_description',
-        value: 'A modern, plugin-based content management system',
-        type: 'string',
-        group: 'general',
-        label: 'Site Description',
-        description: 'A brief description of your website',
-        isPublic: true,
-        isAutoload: true
-      },
-      {
-        key: 'posts_per_page',
-        value: 10,
-        type: 'number',
-        group: 'reading',
-        label: 'Posts Per Page',
-        description: 'Number of posts to show per page',
-        isPublic: true,
-        isAutoload: true,
-        validation: { min: 1, max: 100 }
-      },
-      {
-        key: 'comment_status',
-        value: 'open',
-        type: 'string',
-        group: 'discussion',
-        label: 'Default Comment Status',
-        description: 'Default comment status for new posts',
-        isPublic: false,
-        isAutoload: true,
-        validation: { enum: ['open', 'closed'] }
-      },
-      {
-        key: 'comment_moderation',
-        value: true,
-        type: 'boolean',
-        group: 'discussion',
-        label: 'Comment Moderation',
-        description: 'Require approval for comments',
-        isPublic: false,
-        isAutoload: true
-      }
-    ];
-
-    for (const setting of defaultSettings) {
-      const existing = await this.getSettingByKey(setting.key);
-      if (!existing) {
-        await this.createSetting(setting);
-      }
+  const defaultSettings = [
+    {
+      key: 'site_title',
+      value: 'Vyral CMS',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Site Title',
+      description: 'The title of your website',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'site_description',
+      value: 'A modern, plugin-based content management system',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Site Description',
+      description: 'A brief description of your website',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'posts_per_page',
+      value: 10,
+      type: 'number' as const,
+      group: 'reading',
+      label: 'Posts Per Page',
+      description: 'Number of posts to show per page',
+      isPublic: true,
+      isAutoload: true,
+      validation: { min: 1, max: 100 }
+    },
+    {
+      key: 'comment_status',
+      value: 'open',
+      type: 'string' as const,
+      group: 'discussion',
+      label: 'Default Comment Status',
+      description: 'Default comment status for new posts',
+      isPublic: false,
+      isAutoload: true,
+      validation: { enum: ['open', 'closed'] }
+    },
+    {
+      key: 'comment_moderation',
+      value: true,
+      type: 'boolean' as const,
+      group: 'discussion',
+      label: 'Comment Moderation',
+      description: 'Require approval for comments',
+      isPublic: false,
+      isAutoload: true
     }
+  ];
 
-    this.logger.info('Default settings initialized');
+  for (const setting of defaultSettings) {
+    const existing = await this.getSettingByKey(setting.key);
+    if (!existing) {
+      await this.createSetting(setting);
+    }
   }
+
+  this.logger.info('Default settings initialized');
+}
 }
