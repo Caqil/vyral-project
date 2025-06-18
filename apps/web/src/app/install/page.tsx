@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
-import InstallationWizard from '@/components/installation-wizard';
+import React, { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import InstallationWizard from "@/components/installation-wizard";
 
 export default function InstallPage() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     checkInstallationStatus();
@@ -15,14 +15,14 @@ export default function InstallPage() {
 
   const checkInstallationStatus = async () => {
     try {
-      const response = await fetch('/api/install/status');
+      const response = await fetch("/api/install/status");
       const data = await response.json();
-      
+
       if (data.isInstalled) {
         setIsInstalled(true);
       }
     } catch (err) {
-      setError('Unable to check installation status.');
+      setError("Unable to check installation status.");
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +49,8 @@ export default function InstallPage() {
               Already Installed
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Vyral CMS is already installed on this system. You cannot run the installation wizard again.
+              Vyral CMS is already installed on this system. You cannot run the
+              installation wizard again.
             </p>
           </div>
           <div className="space-y-4">
@@ -80,9 +81,7 @@ export default function InstallPage() {
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
               Installation Error
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              {error}
-            </p>
+            <p className="mt-2 text-sm text-gray-600">{error}</p>
           </div>
           <button
             onClick={checkInstallationStatus}

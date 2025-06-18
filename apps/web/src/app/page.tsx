@@ -1,8 +1,4 @@
-import { Suspense } from "react";
-import { PostService } from "@vyral/core";
-import { connectDB } from "@/lib/db";
-import { PostCard } from "@/components/post-card";
-import { PostCardSkeleton } from "@/components/skeletons";
+
 import Link from "next/link";
 import { Button } from '@vyral/ui';
 

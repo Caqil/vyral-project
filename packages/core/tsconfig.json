@@ -7,9 +7,6 @@
     "esModuleInterop": true,
     "allowJs": true,
     "checkJs": false,
-    "jsx": "preserve",
-    "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -20,14 +17,21 @@
     "strictFunctionTypes": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleDetection": "force",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
+    "types": [
+      "node",
+      "jest"
+    ]
   },
   "include": [
     "src/**/*"

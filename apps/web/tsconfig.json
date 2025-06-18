@@ -1,34 +1,18 @@
 {
   "compilerOptions": {
-    // Target ES2022 for modern JavaScript features
     "target": "ES2022",
-    
-    // Use bundler module resolution for Next.js
     "module": "ESNext",
     "moduleResolution": "bundler",
-    
-    // JSX Configuration - CRITICAL for React/Next.js
     "jsx": "preserve",
     "jsxImportSource": "react",
-    
-    // Allow importing from CommonJS modules
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    
-    // Enable JavaScript files
     "allowJs": true,
     "checkJs": false,
-    
-    // Output configuration
-    "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist",
     "noEmit": true,
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
-    
-    // Module resolution
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
@@ -37,8 +21,6 @@
       "@/hooks/*": ["./src/hooks/*"],
       "@/types/*": ["./src/types/*"]
     },
-    
-    // Strict type checking
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
@@ -49,46 +31,34 @@
     "noImplicitThis": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": false,
-    
-    // Additional checks
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "exactOptionalPropertyTypes": false,
-    
-    // Compiler options
     "removeComments": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": false,
-    
-    // Library includes
     "lib": [
       "dom",
       "dom.iterable",
       "es6",
       "es2022"
     ],
-    
-    // Plugin support
     "plugins": [
       {
         "name": "next"
       }
     ]
   },
-  
-  // Files to include
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/**/*"
-, "../../packages/ui/src/hooks/use-debounce.ts", "../../packages/ui/src/hooks/use-mobile.tsx", "../../packages/ui/src/hooks/use-posts.ts"  ],
-  
-  // Files to exclude
+  ],
   "exclude": [
     "node_modules",
     ".next",

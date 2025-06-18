@@ -17,9 +17,9 @@
     "install:clean": "rm -rf node_modules packages/*/node_modules apps/*/node_modules plugins/*/node_modules && pnpm install"
   },
   "devDependencies": {
-    "turbo": "^1.10.16",
-    "typescript": "^5.8.3",
-    "@vyral/ui": "workspace:*"
+    "@vyral/ui": "workspace:*",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
   },
   "packageManager": "pnpm@10.12.1"
 }

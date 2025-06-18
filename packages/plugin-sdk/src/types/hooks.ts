@@ -1,4 +1,5 @@
-import { Media, Post, User } from "..";
+import { Media, Post, User } from "@vyral/core";
+
 
 
 // Hook context interface

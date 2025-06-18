@@ -1,11 +1,10 @@
 import { Suspense } from "react";
-import { PostService, UserService } from "@vyral/core";
 import { connectDB } from "@/lib/db";
 import { DashboardStats } from "@/components/admin/dashboard-stats";
 import { RecentActivity } from "@/components/admin/recent-activity";
 import { QuickActions } from "@/components/admin/quick-actions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from "@vyral/ui";
+import { PostService } from '@vyral/core';
 
 async function getDashboardData() {
   await connectDB();

@@ -20,7 +20,7 @@ import {
   Image,
   Code2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@vyral/ui/src/lib";
 
 interface EditorToolbarProps {
   editor: Editor;
