@@ -1,73 +1,43 @@
-/* Additional theme styles for custom themes */
+/* Additional theme variations can go here */
 
-/* Alternative theme: Blue */
+/* Light theme variations */
 .theme-blue {
   --primary: 221.2 83.2% 53.3%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
 }
 
-/* Alternative theme: Green */
 .theme-green {
   --primary: 142.1 76.2% 36.3%;
   --primary-foreground: 355.7 100% 97.3%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
 }
 
-/* Alternative theme: Purple */
 .theme-purple {
   --primary: 262.1 83.3% 57.8%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 270 3.2% 92.1%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --accent: 270 3.2% 92.1%;
-  --accent-foreground: 222.2 84% 4.9%;
 }
 
-/* Alternative theme: Orange */
-.theme-orange {
-  --primary: 20.5 90.2% 48.2%;
-  --primary-foreground: 60 9.1% 97.8%;
-  --secondary: 60 4.8% 95.9%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 60 4.8% 95.9%;
-  --accent-foreground: 24 9.8% 10%;
+.theme-red {
+  --primary: 0 84.2% 60.2%;
+  --primary-foreground: 210 40% 98%;
 }
 
-/* Sidebar theme variations */
-.sidebar-theme-blue {
-  --sidebar-primary: 221.2 83.2% 53.3%;
-  --sidebar-primary-foreground: 210 40% 98%;
-  --sidebar-accent: 210 40% 96%;
-  --sidebar-accent-foreground: 222.2 84% 4.9%;
+/* Dark theme variations */
+.dark.theme-blue {
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 84% 4.9%;
 }
 
-.sidebar-theme-green {
-  --sidebar-primary: 142.1 76.2% 36.3%;
-  --sidebar-primary-foreground: 355.7 100% 97.3%;
-  --sidebar-accent: 210 40% 96%;
-  --sidebar-accent-foreground: 222.2 84% 4.9%;
+.dark.theme-green {
+  --primary: 142.1 70.6% 45.3%;
+  --primary-foreground: 144.9 80.4% 10%;
 }
 
-/* Custom scrollbar styles */
-.custom-scrollbar::-webkit-scrollbar {
-  @apply w-2;
+.dark.theme-purple {
+  --primary: 263.4 70% 50.4%;
+  --primary-foreground: 210 40% 98%;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  @apply bg-muted;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-border rounded-md;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  @apply bg-border/80;
+.dark.theme-red {
+  --primary: 0 62.8% 30.6%;
+  --primary-foreground: 210 40% 98%;
 }

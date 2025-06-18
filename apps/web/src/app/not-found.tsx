@@ -132,19 +132,6 @@ export default function NotFound() {
             </span>
           </button>
         </div>
-
-        {/* Fun interactive element */}
-        <div className="mt-16 animate-fade-in-up animation-delay-900">
-          <p className="text-gray-400 mb-4">
-            Lost? Try moving your mouse around!
-          </p>
-          <div
-            className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full mx-auto transition-all duration-150 ease-out"
-            style={{
-              transform: `translate(${(mousePosition.x - window.innerWidth / 2) * 0.02}px, ${(mousePosition.y - window.innerHeight / 2) * 0.02}px)`,
-            }}
-          />
-        </div>
       </div>
 
       <style jsx>{`

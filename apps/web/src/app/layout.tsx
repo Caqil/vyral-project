@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 // Fixed: Use the correct package export path instead of @ui/src/styles/globals.css
-import "@vyral/ui/styles/index.css";
-import "@vyral/ui/styles/themes.css";
+import "@vyral/ui/styles";
 import { cn, Toaster } from "@vyral/ui";
 
 const inter = Inter({ subsets: ["latin"] });
