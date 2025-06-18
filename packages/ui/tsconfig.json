@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "target": "es2020",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

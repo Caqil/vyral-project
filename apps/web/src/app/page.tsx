@@ -3,8 +3,8 @@ import { PostService } from "@vyral/core";
 import { connectDB } from "@/lib/db";
 import { PostCard } from "@/components/post-card";
 import { PostCardSkeleton } from "@/components/skeletons";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from '@vyral/ui';
 
 export default function HomePage() {
   return (

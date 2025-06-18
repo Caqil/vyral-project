@@ -62,7 +62,8 @@
   "peerDependencies": {
     "next": "^13.0.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "@vyral/ui": "workspace:*"
   },
   "keywords": [
     "vyral",

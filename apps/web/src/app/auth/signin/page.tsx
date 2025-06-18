@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from 'sonner';
 
 const signinSchema = z.object({
   email: z.string().email("Invalid email address"),

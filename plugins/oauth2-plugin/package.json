@@ -3,16 +3,23 @@
   "version": "1.0.0",
   "description": "OAuth2 authentication provider for Vyral CMS",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@vyral/plugin-sdk": "^1.0.0"
+    "@vyral/plugin-sdk": "workspace:*",
+    "@vyral/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   }
 }

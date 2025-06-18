@@ -1,34 +1,25 @@
 {
   "name": "vyral-cms",
-  "version": "1.0.0",
-  "description": "Modular WordPress Alternative Built with Next.js",
   "private": true,
-  "packageManager": "pnpm@10.12.1",
-  "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "start": "turbo run start",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "clean": "turbo run clean",
-    "type-check": "turbo run type-check",
-    "db:setup": "cd apps/web && npm run db:setup",
-    "db:seed": "cd apps/web && npm run db:seed"
-  },
-  "devDependencies": {
-    "@turbo/gen": "^1.10.12",
-    "@types/node": "^20.5.2",
-    "eslint": "^8.48.0",
-    "prettier": "^3.0.3",
-    "turbo": "^1.10.12",
-    "typescript": "^5.8.3"
-  },
   "workspaces": [
     "apps/*",
     "packages/*",
+    "packages/ui",
     "plugins/*"
   ],
-  "engines": {
-    "node": ">=20"
-  }
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean",
+    "install:clean": "rm -rf node_modules packages/*/node_modules apps/*/node_modules plugins/*/node_modules && pnpm install"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.16",
+    "typescript": "^5.8.3",
+    "@vyral/ui": "workspace:*"
+  },
+  "packageManager": "pnpm@10.12.1"
 }
