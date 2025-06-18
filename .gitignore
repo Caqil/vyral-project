@@ -34,7 +34,6 @@ dist
 # Build outputs
 build/
 dist/
-lib/
 es/
 
 # Coverage directory used by tools like istanbul

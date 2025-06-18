@@ -26,8 +26,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "plugins/*",
-    "themes/*"
+    "plugins/*"
   ],
   "engines": {
     "node": ">=20"

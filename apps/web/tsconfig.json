@@ -86,7 +86,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/**/*"
-  ],
+, "../../packages/ui/src/hooks/use-debounce.ts", "../../packages/ui/src/hooks/use-mobile.tsx", "../../packages/ui/src/hooks/use-posts.ts"  ],
   
   // Files to exclude
   "exclude": [
