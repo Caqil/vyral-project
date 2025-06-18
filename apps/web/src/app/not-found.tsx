@@ -1,6 +1,6 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
 
 export default function NotFound() {
   const router = useRouter();
