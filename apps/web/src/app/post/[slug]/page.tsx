@@ -63,8 +63,8 @@ async function PostData({ slug }: { slug: string }) {
         {post.featuredImage && (
           <div className="relative aspect-video mb-8 overflow-hidden rounded-lg">
             <Image
-              src={post.featuredImage.url}
-              alt={post.featuredImage.alt || post.title}
+              src={post.featuredImage}
+              alt={post.featuredImage || post.title}
               fill
               className="object-cover"
               priority
@@ -90,18 +90,22 @@ async function PostData({ slug }: { slug: string }) {
         <div className="flex flex-wrap items-center gap-6 mb-8 text-muted-foreground">
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={post.author.avatar} />
-              <AvatarFallback>
-                {post.author.displayName.charAt(0)}
-              </AvatarFallback>
+              <AvatarImage src={post.author} />
+              <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="font-medium">{post.author.displayName}</span>
+            <span className="font-medium">{post.author}</span>
           </div>
 
           <div className="flex items-center space-x-1">
             <Calendar className="h-4 w-4" />
-            <time dateTime={post.publishedAt}>
-              {formatDate(post.publishedAt)}
+            <time
+              dateTime={
+                post.publishedAt
+                  ? new Date(post.publishedAt).toISOString()
+                  : undefined
+              }
+            >
+              {post.publishedAt ? formatDate(post.publishedAt) : "Unpublished"}
             </time>
           </div>
 
@@ -149,7 +153,7 @@ async function PostData({ slug }: { slug: string }) {
                   {relatedPost.featuredImage && (
                     <div className="relative aspect-video mb-3 overflow-hidden rounded-lg">
                       <Image
-                        src={relatedPost.featuredImage.url}
+                        src={relatedPost.featuredImage}
                         alt={relatedPost.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform"
