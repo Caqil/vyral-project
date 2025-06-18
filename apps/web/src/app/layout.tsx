@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"] });
+
 export const metadata: Metadata = {
   title: {
     default: "Vyral CMS",
@@ -60,7 +62,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body
+        className={cn(
+          inter.className,
+          "min-h-screen bg-background font-sans antialiased"
+        )}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

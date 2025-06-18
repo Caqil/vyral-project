@@ -53,6 +53,7 @@
     "@tiptap/starter-kit": "^2.14.0",
     "@vyral/core": "workspace:*",
     "@vyral/plugin-sdk": "workspace:*",
+    "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^0.2.1",
@@ -85,6 +86,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.10",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^13.4.0",
     "@types/multer": "^1.4.13",
