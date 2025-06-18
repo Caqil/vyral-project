@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@vyral/ui";
+import { Avatar, AvatarFallback, AvatarImage } from "@vyral/ui";
 import { formatRelativeTime } from "../../../../../packages/plugin-sdk/src/utils/date-utils";
 
 // Mock data - replace with real data from your activity service

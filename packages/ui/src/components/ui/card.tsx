@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@vyral/ui/src/lib";
+import { cn } from "../../lib";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (

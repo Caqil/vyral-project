@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { PostService } from "@vyral/core";
 import { connectDB } from "@/lib/db";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@vyral/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@vyral/ui";
+import { Badge } from "@vyral/uibadge";
+import { Input } from "@vyral/uiinput";
+import { Skeleton } from "@vyral/uiskeleton";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { Plus, Search, Filter, Edit, Trash2, Eye } from "lucide-react";
 

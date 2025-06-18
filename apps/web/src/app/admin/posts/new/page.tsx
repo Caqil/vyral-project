@@ -6,18 +6,18 @@ import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Button } from "@vyral/ui";
+import { Input } from "@vyral/uiinput";
+import { Textarea } from "@vyral/uitextarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@vyral/ui";
+import { Label } from "@vyral/uilabel";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@vyral/uiselect";
 import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { toast } from "sonner";
 import { Save, Eye, ArrowLeft } from "lucide-react";

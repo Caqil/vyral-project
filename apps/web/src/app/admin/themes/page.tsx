@@ -1,17 +1,17 @@
 import { Suspense } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { Button } from "@vyral/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@vyral/ui";
+import { Badge } from "@vyral/uibadge";
+import { Input } from "@vyral/uiinput";
+import { Skeleton } from "@vyral/uiskeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@vyral/uitabs";
 import {
   Plus,
   Search,

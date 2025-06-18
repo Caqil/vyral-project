@@ -1,4 +1,4 @@
-import { cn } from "@vyral/ui/src/lib";
+import { cn } from "../../lib";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (

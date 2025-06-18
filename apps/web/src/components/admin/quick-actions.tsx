@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Button, Card, CardContent, CardHeader, CardTitle } from "@vyral/ui";
 import { Plus, Upload, Settings, Download } from "lucide-react";
 import Link from "next/link";
 

@@ -1,10 +1,10 @@
-import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { AdminSidebar } from '@/components/admin/sidebar';
-import { AdminHeader } from '@/components/admin/header';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { AdminSidebar } from "@/components/admin/sidebar";
+import { AdminHeader } from "@/components/admin/header";
+import { LoadingSpinner } from "@vyral/ui";
 
 export default async function AdminLayout({
   children,
@@ -18,18 +18,20 @@ export default async function AdminLayout({
     role?: string | null;
   }
 
-  const session = await getServerSession(authOptions) as
-    | (Omit<Awaited<ReturnType<typeof getServerSession>>, 'user'> & { user: AdminUser })
+  const session = (await getServerSession(authOptions)) as
+    | (Omit<Awaited<ReturnType<typeof getServerSession>>, "user"> & {
+        user: AdminUser;
+      })
     | null;
 
   if (!session) {
-    redirect('/auth/signin?callbackUrl=/admin');
+    redirect("/auth/signin?callbackUrl=/admin");
   }
 
   // Check if user has admin access
-  const allowedRoles = ['super_admin', 'admin', 'editor'];
-  if (!session.user || !allowedRoles.includes(session.user.role ?? '')) {
-    redirect('/');
+  const allowedRoles = ["super_admin", "admin", "editor"];
+  if (!session.user || !allowedRoles.includes(session.user.role ?? "")) {
+    redirect("/");
   }
 
   return (
@@ -38,9 +40,7 @@ export default async function AdminLayout({
       <div className="lg:pl-64">
         <AdminHeader />
         <main className="p-6">
-          <Suspense fallback={<LoadingSpinner />}>
-            {children}
-          </Suspense>
+          <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
         </main>
       </div>
     </div>

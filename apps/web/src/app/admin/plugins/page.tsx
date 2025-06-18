@@ -1,16 +1,13 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Badge, Button, Input, LoadingSpinner, Skeleton } from "@vyral/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@vyral/ui";
 import {
   Plus,
   Search,
@@ -24,7 +21,6 @@ import {
   Power,
   PowerOff,
 } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Plugin {
   id: string;

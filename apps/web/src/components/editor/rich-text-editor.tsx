@@ -8,7 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import lowlight from "lowlight";
 import { EditorToolbar } from "./editor-toolbar";
-import { cn } from "@vyral/ui/src/lib";
+import { cn } from "../../lib";
 
 interface RichTextEditorProps {
   content?: string;

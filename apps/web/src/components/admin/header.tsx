@@ -3,16 +3,18 @@
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Bell, Moon, Sun, User, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
+  Button,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+} from "@vyral/ui";
 import Link from "next/link";
 
 export function AdminHeader() {

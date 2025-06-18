@@ -1,8 +1,8 @@
 "use client";
 
 import { type Editor } from "@tiptap/react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Button, cn } from "@vyral/ui";
+import { Separator } from "@vyral/uiseparator";
 import {
   Bold,
   Italic,
@@ -20,7 +20,6 @@ import {
   Image,
   Code2,
 } from "lucide-react";
-import { cn } from "@vyral/ui/src/lib";
 
 interface EditorToolbarProps {
   editor: Editor;

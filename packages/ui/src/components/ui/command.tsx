@@ -4,14 +4,14 @@ import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { SearchIcon } from "lucide-react";
 
-import { cn } from "@vyral/ui/src/lib";
+import { cn } from "../../lib";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@vyral/ui/src";
+} from "./dialog";
 
 function Command({
   className,

@@ -1,4 +1,4 @@
-import { cn } from "@vyral/ui/src/lib";
+import { cn } from "../../lib";
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";

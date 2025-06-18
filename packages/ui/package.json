@@ -5,14 +5,18 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-   "exports": {
+  "exports": {
     ".": {
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./styles/globals.css": "./dist/globals.css",
-    "./styles/themes.css": "./dist/themes.css"
+    "./lib": {
+      "import": "./dist/lib/index.mjs",
+      "require": "./dist/lib/index.js",
+      "types": "./dist/lib/index.d.ts"
+    },
+    "./styles": "./dist/index.css"
   },
   "files": [
     "dist/**"
