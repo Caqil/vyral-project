@@ -1,0 +1,85 @@
+{
+  "name": "oauth2-plugin",
+  "version": "1.0.0",
+  "description": "OAuth2 authentication provider for external services",
+  "author": "Vyral Team",
+  "vyralVersion": "^1.0.0",
+  "hooks": [
+    "auth:before-login",
+    "auth:after-login",
+    "admin:menu",
+    "frontend:login-form"
+  ],
+  "adminPages": [
+    {
+      "title": "OAuth2 Settings",
+      "slug": "oauth2-settings",
+      "component": "OAuthSettings",
+      "icon": "Key",
+      "parent": "settings"
+    }
+  ],
+  "routes": [
+    {
+      "path": "/api/auth/oauth/:provider",
+      "component": "OAuthCallback",
+      "method": "GET"
+    },
+    {
+      "path": "/api/auth/oauth/:provider/callback",
+      "component": "OAuthCallback", 
+      "method": "GET"
+    }
+  ],
+  "settings": [
+    {
+      "key": "google_client_id",
+      "label": "Google Client ID",
+      "type": "text",
+      "group": "google",
+      "description": "OAuth2 client ID from Google Console"
+    },
+    {
+      "key": "google_client_secret",
+      "label": "Google Client Secret",
+      "type": "text",
+      "group": "google",
+      "description": "OAuth2 client secret from Google Console"
+    },
+    {
+      "key": "github_client_id",
+      "label": "GitHub Client ID", 
+      "type": "text",
+      "group": "github"
+    },
+    {
+      "key": "github_client_secret",
+      "label": "GitHub Client Secret",
+      "type": "text",
+      "group": "github"
+    },
+    {
+      "key": "microsoft_client_id",
+      "label": "Microsoft Client ID",
+      "type": "text", 
+      "group": "microsoft"
+    },
+    {
+      "key": "microsoft_client_secret",
+      "label": "Microsoft Client Secret",
+      "type": "text",
+      "group": "microsoft"
+    },
+    {
+      "key": "enabled_providers",
+      "label": "Enabled Providers",
+      "type": "select",
+      "options": [
+        { "label": "Google", "value": "google" },
+        { "label": "GitHub", "value": "github" },
+        { "label": "Microsoft", "value": "microsoft" }
+      ],
+      "default": ["google"]
+    }
+  ]
+}
