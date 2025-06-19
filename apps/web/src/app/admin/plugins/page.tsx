@@ -1,13 +1,17 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Badge, Button, Input, LoadingSpinner, Skeleton } from "@vyral/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@vyral/ui";
+  Badge,
+  Button,
+  Input,
+  LoadingSpinner,
+  Skeleton,
+} from "@/components/ui";
 import {
   Plus,
   Search,
@@ -20,6 +24,7 @@ import {
   ExternalLink,
   Power,
   PowerOff,
+  Package,
 } from "lucide-react";
 
 interface Plugin {
@@ -28,255 +33,257 @@ interface Plugin {
   version: string;
   description: string;
   author: string;
-  status: "active" | "inactive" | "error" | "updating";
-  isCore: boolean;
-  hasUpdate: boolean;
+  status: "loaded" | "activated" | "deactivated" | "error";
+  isCore?: boolean;
+  hasUpdate?: boolean;
   newVersion?: string;
   homepage?: string;
   configurable: boolean;
   dependencies: string[];
-  screenshots: string[];
-  lastUpdated: Date;
-  downloadCount: number;
-  rating: number;
+  lastUpdated?: Date;
+  errorMessage?: string;
 }
 
 async function getPlugins(): Promise<Plugin[]> {
-  // Simulate API call - replace with actual plugin service
-  return [
-    {
-      id: "seo-optimizer",
-      name: "SEO Optimizer",
-      version: "1.2.3",
-      description:
-        "Advanced SEO tools and meta tag management for better search engine visibility.",
-      author: "Vyral Team",
-      status: "active",
-      isCore: false,
-      hasUpdate: true,
-      newVersion: "1.3.0",
-      homepage: "https://vyral.com/plugins/seo",
-      configurable: true,
-      dependencies: [],
-      screenshots: [],
-      lastUpdated: new Date("2024-01-15"),
-      downloadCount: 1250,
-      rating: 4.8,
-    },
-    {
-      id: "backup-manager",
-      name: "Backup Manager",
-      version: "2.1.0",
-      description:
-        "Automated backup solutions with cloud storage integration and scheduling.",
-      author: "Vyral Team",
-      status: "active",
-      isCore: false,
-      hasUpdate: false,
-      homepage: "https://vyral.com/plugins/backup",
-      configurable: true,
-      dependencies: [],
-      screenshots: [],
-      lastUpdated: new Date("2024-01-10"),
-      downloadCount: 950,
-      rating: 4.6,
-    },
-    {
-      id: "analytics-pro",
-      name: "Analytics Pro",
-      version: "1.0.5",
-      description:
-        "Comprehensive analytics dashboard with custom reporting and visitor insights.",
-      author: "Third Party Dev",
-      status: "inactive",
-      isCore: false,
-      hasUpdate: false,
-      homepage: "https://example.com/analytics-pro",
-      configurable: true,
-      dependencies: ["seo-optimizer"],
-      screenshots: [],
-      lastUpdated: new Date("2023-12-20"),
-      downloadCount: 2100,
-      rating: 4.9,
-    },
-    {
-      id: "core-content",
-      name: "Core Content System",
-      version: "1.0.0",
-      description: "Essential content management functionality for Vyral CMS.",
-      author: "Vyral Team",
-      status: "active",
-      isCore: true,
-      hasUpdate: false,
-      configurable: false,
-      dependencies: [],
-      screenshots: [],
-      lastUpdated: new Date("2024-01-01"),
-      downloadCount: 0,
-      rating: 5.0,
-    },
-  ];
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || ""}/api/admin/plugins`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store", // Don't cache since we want fresh plugin data
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        // Plugins directory doesn't exist or no plugins found
+        return [];
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Failed to fetch plugins:", error);
+    return [];
+  }
 }
 
-function PluginCard({ plugin }: { plugin: Plugin }) {
-  const getStatusColor = (status: Plugin["status"]) => {
-    switch (status) {
-      case "active":
-        return "text-green-600 bg-green-50";
-      case "inactive":
-        return "text-gray-600 bg-gray-50";
-      case "error":
-        return "text-red-600 bg-red-50";
-      case "updating":
-        return "text-blue-600 bg-blue-50";
-      default:
-        return "text-gray-600 bg-gray-50";
-    }
-  };
+function getStatusIcon(status: Plugin["status"]) {
+  switch (status) {
+    case "activated":
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case "loaded":
+    case "deactivated":
+      return <Power className="h-4 w-4 text-gray-400" />;
+    case "error":
+      return <AlertCircle className="h-4 w-4 text-red-500" />;
+    default:
+      return <Power className="h-4 w-4 text-gray-400" />;
+  }
+}
 
-  const getStatusIcon = (status: Plugin["status"]) => {
-    switch (status) {
-      case "active":
-        return <CheckCircle className="h-4 w-4" />;
-      case "inactive":
-        return <PowerOff className="h-4 w-4" />;
-      case "error":
-        return <AlertCircle className="h-4 w-4" />;
-      case "updating":
-        return <LoadingSpinner size="sm" />;
-      default:
-        return <PowerOff className="h-4 w-4" />;
-    }
-  };
+function getStatusColor(status: Plugin["status"]) {
+  switch (status) {
+    case "activated":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "loaded":
+    case "deactivated":
+      return "bg-gray-100 text-gray-800 border-gray-200";
+    case "error":
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+}
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">{plugin.name}</CardTitle>
-              {plugin.isCore && (
-                <Badge variant="secondary" className="text-xs">
-                  Core
-                </Badge>
-              )}
-              {plugin.hasUpdate && (
-                <Badge variant="destructive" className="text-xs">
-                  Update Available
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>v{plugin.version}</span>
-              <span>•</span>
-              <span>by {plugin.author}</span>
-              {plugin.rating > 0 && (
-                <>
-                  <span>•</span>
-                  <span>★ {plugin.rating}</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div
-            className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(plugin.status)}`}
-          >
-            {getStatusIcon(plugin.status)}
-            <span className="capitalize">{plugin.status}</span>
+function getStatusText(status: Plugin["status"]) {
+  switch (status) {
+    case "activated":
+      return "Active";
+    case "loaded":
+      return "Loaded";
+    case "deactivated":
+      return "Inactive";
+    case "error":
+      return "Error";
+    default:
+      return "Unknown";
+  }
+}
+
+async function PluginsList() {
+  const plugins = await getPlugins();
+
+  if (plugins.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto max-w-md">
+          <Package className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            No plugins installed
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Get started by installing your first plugin or uploading a plugin
+            package.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button variant="outline" asChild>
+              <Link href="/admin/plugins/upload">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Plugin
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/admin/plugins/browse">
+                <Plus className="h-4 w-4 mr-2" />
+                Browse Plugin Registry
+              </Link>
+            </Button>
           </div>
         </div>
-        <CardDescription>{plugin.description}</CardDescription>
-      </CardHeader>
+      </div>
+    );
+  }
 
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            {!plugin.isCore && (
-              <Button
-                variant={plugin.status === "active" ? "destructive" : "default"}
-                size="sm"
-              >
-                {plugin.status === "active" ? (
-                  <>
-                    <PowerOff className="h-4 w-4 mr-1" />
-                    Deactivate
-                  </>
-                ) : (
-                  <>
-                    <Power className="h-4 w-4 mr-1" />
-                    Activate
-                  </>
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {plugins.map((plugin) => (
+        <Card key={plugin.id} className="relative">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg font-medium text-gray-900 truncate">
+                  {plugin.name}
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-500">
+                  by {plugin.author}
+                </CardDescription>
+              </div>
+              <div className="flex items-center space-x-2 ml-2">
+                {getStatusIcon(plugin.status)}
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${getStatusColor(plugin.status)}`}
+                >
+                  {getStatusText(plugin.status)}
+                </Badge>
+              </div>
+            </div>
+            {plugin.isCore && (
+              <Badge variant="secondary" className="w-fit text-xs">
+                Core Plugin
+              </Badge>
+            )}
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {plugin.description}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>v{plugin.version}</span>
+              {plugin.lastUpdated && (
+                <span>Updated {plugin.lastUpdated.toLocaleDateString()}</span>
+              )}
+            </div>
+
+            {plugin.dependencies.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                <span className="text-xs text-gray-500">Dependencies:</span>
+                {plugin.dependencies.slice(0, 2).map((dep) => (
+                  <Badge key={dep} variant="outline" className="text-xs">
+                    {dep}
+                  </Badge>
+                ))}
+                {plugin.dependencies.length > 2 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{plugin.dependencies.length - 2}
+                  </Badge>
                 )}
-              </Button>
+              </div>
             )}
 
-            {plugin.configurable && (
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-1" />
-                Settings
-              </Button>
+            {plugin.status === "error" && plugin.errorMessage && (
+              <div className="flex items-start space-x-2 p-2 bg-red-50 rounded-md">
+                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-red-800">
+                  {plugin.errorMessage}
+                </span>
+              </div>
             )}
 
             {plugin.hasUpdate && (
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-1" />
-                Update to v{plugin.newVersion}
-              </Button>
-            )}
-          </div>
-
-          <div className="flex gap-1">
-            {plugin.homepage && (
-              <Button variant="ghost" size="sm">
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            )}
-
-            {!plugin.isCore && (
-              <Button variant="ghost" size="sm">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {plugin.dependencies.length > 0 && (
-          <div className="mt-3 pt-3 border-t">
-            <p className="text-xs text-muted-foreground mb-1">Dependencies:</p>
-            <div className="flex gap-1">
-              {plugin.dependencies.map((dep) => (
-                <Badge key={dep} variant="outline" className="text-xs">
-                  {dep}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function PluginsSkeleton() {
-  return (
-    <div className="grid gap-6">
-      {[...Array(3)].map((_, i) => (
-        <Card key={i}>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <Skeleton className="h-6 w-40" />
-                <Skeleton className="h-4 w-60" />
+              <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-md">
+                <Download className="h-4 w-4 text-blue-600" />
+                <span className="text-sm text-blue-800">
+                  Update available: v{plugin.newVersion}
+                </span>
               </div>
-              <Skeleton className="h-6 w-16" />
-            </div>
-            <Skeleton className="h-4 w-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Skeleton className="h-8 w-20" />
-              <Skeleton className="h-8 w-20" />
+            )}
+
+            <div className="flex items-center justify-between pt-2 border-t">
+              <div className="flex space-x-2">
+                {plugin.configurable && plugin.status === "activated" && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/admin/plugins/${plugin.id}/settings`}>
+                      <Settings className="h-3 w-3" />
+                    </Link>
+                  </Button>
+                )}
+
+                {plugin.homepage && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      href={plugin.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex space-x-2">
+                {plugin.status === "activated" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    disabled={plugin.isCore}
+                  >
+                    <PowerOff className="h-3 w-3 mr-1" />
+                    Deactivate
+                  </Button>
+                ) : plugin.status === "loaded" ||
+                  plugin.status === "deactivated" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    <Power className="h-3 w-3 mr-1" />
+                    Activate
+                  </Button>
+                ) : null}
+
+                {!plugin.isCore && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -285,57 +292,65 @@ function PluginsSkeleton() {
   );
 }
 
-async function PluginsContent() {
-  const plugins = await getPlugins();
-
-  return (
-    <div className="grid gap-6">
-      {plugins.map((plugin) => (
-        <PluginCard key={plugin.id} plugin={plugin} />
-      ))}
-    </div>
-  );
-}
-
-export default function AdminPluginsPage() {
+export default function PluginsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Plugins</h1>
-          <p className="text-muted-foreground">
-            Manage your installed plugins and discover new ones
+          <h1 className="text-2xl font-bold text-gray-900">Plugins</h1>
+          <p className="text-gray-600">
+            Manage your installed plugins and extend your application
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Plugin
+        <div className="flex space-x-3">
+          <Button variant="outline" asChild>
+            <Link href="/admin/plugins/upload">
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Plugin
+            </Link>
           </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Browse Plugins
+          <Button asChild>
+            <Link href="/admin/plugins/browse">
+              <Plus className="h-4 w-4 mr-2" />
+              Browse Plugins
+            </Link>
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center space-x-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input placeholder="Search plugins..." className="pl-10" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input type="text" placeholder="Search plugins..." className="pl-9" />
         </div>
-
-        <Button variant="outline" size="sm">
-          All Status
-        </Button>
-
-        <Button variant="outline" size="sm">
-          All Authors
-        </Button>
+        <select className="rounded-md border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option value="all">All Plugins</option>
+          <option value="activated">Active</option>
+          <option value="loaded">Loaded</option>
+          <option value="deactivated">Inactive</option>
+          <option value="error">Error</option>
+        </select>
       </div>
 
-      <Suspense fallback={<PluginsSkeleton />}>
-        <PluginsContent />
+      <Suspense
+        fallback={
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        }
+      >
+        <PluginsList />
       </Suspense>
     </div>
   );

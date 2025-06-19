@@ -15,8 +15,8 @@ import {
   CardHeader,
   CardTitle,
   Label,
-} from "@vyral/ui";
-import { Alert, AlertDescription,Input,Button } from "@vyral/ui";
+} from "@/components/ui";
+import { Alert, AlertDescription, Input, Button } from "@/components/ui";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { toast } from "sonner";
 

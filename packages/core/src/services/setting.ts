@@ -287,8 +287,7 @@ export class SettingService extends BaseService<SettingDocument> {
     return { valid: errors.length === 0, errors };
   }
 
-  // Initialize default settings
-  async initializeDefaults(): Promise<void> {
+async initializeDefaults(): Promise<void> {
   const defaultSettings = [
     {
       key: 'site_title',
@@ -302,55 +301,264 @@ export class SettingService extends BaseService<SettingDocument> {
     },
     {
       key: 'site_description',
-      value: 'A modern, plugin-based content management system',
+      value: 'A modern CMS built with Next.js',
       type: 'string' as const,
       group: 'general',
       label: 'Site Description',
-      description: 'A brief description of your website',
+      description: 'Brief description of your website',
       isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'site_url',
+      value: 'http://localhost:3000',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Site URL',
+      description: 'The URL of your website',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'admin_email',
+      value: 'admin@vyral.com',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Admin Email',
+      description: 'Primary admin email address',
+      isPublic: false,
       isAutoload: true
     },
     {
       key: 'posts_per_page',
       value: 10,
       type: 'number' as const,
-      group: 'reading',
+      group: 'content',
       label: 'Posts Per Page',
-      description: 'Number of posts to show per page',
-      isPublic: true,
-      isAutoload: true,
-      validation: { min: 1, max: 100 }
+      description: 'Number of posts to display per page',
+      isPublic: false,
+      isAutoload: true
     },
     {
-      key: 'comment_status',
-      value: 'open',
-      type: 'string' as const,
-      group: 'discussion',
-      label: 'Default Comment Status',
-      description: 'Default comment status for new posts',
+      key: 'allow_comments',
+      value: true,
+      type: 'boolean' as const,
+      group: 'content',
+      label: 'Allow Comments',
+      description: 'Enable comments on posts',
       isPublic: false,
-      isAutoload: true,
-      validation: { enum: ['open', 'closed'] }
+      isAutoload: true
     },
     {
       key: 'comment_moderation',
       value: true,
       type: 'boolean' as const,
-      group: 'discussion',
+      group: 'content',
       label: 'Comment Moderation',
-      description: 'Require approval for comments',
+      description: 'Require admin approval for comments',
+      isPublic: false,
+      isAutoload: true
+    },
+    {
+      key: 'default_post_status',
+      value: 'draft',
+      type: 'string' as const,
+      group: 'content',
+      label: 'Default Post Status',
+      description: 'Default status for new posts',
+      isPublic: false,
+      isAutoload: true,
+      validation: {
+        enum: ['draft', 'published', 'private']
+      }
+    },
+    {
+      key: 'enable_registration',
+      value: false,
+      type: 'boolean' as const,
+      group: 'users',
+      label: 'Enable Registration',
+      description: 'Allow new user registration',
+      isPublic: false,
+      isAutoload: true
+    },
+    {
+      key: 'default_user_role',
+      value: 'subscriber',
+      type: 'string' as const,
+      group: 'users',
+      label: 'Default User Role',
+      description: 'Default role for new users',
+      isPublic: false,
+      isAutoload: true,
+      validation: {
+        enum: ['subscriber', 'contributor', 'author', 'editor']
+      }
+    },
+    {
+      key: 'date_format',
+      value: 'MMMM d, yyyy',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Date Format',
+      description: 'Display format for dates',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'time_format',
+      value: 'h:mm a',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Time Format',
+      description: 'Display format for times',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'timezone',
+      value: 'UTC',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Timezone',
+      description: 'Site timezone',
+      isPublic: false,
+      isAutoload: true
+    },
+    {
+      key: 'language',
+      value: 'en',
+      type: 'string' as const,
+      group: 'general',
+      label: 'Language',
+      description: 'Site language',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'theme',
+      value: 'default',
+      type: 'string' as const,
+      group: 'appearance',
+      label: 'Theme',
+      description: 'Active theme',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'logo',
+      value: '',
+      type: 'string' as const,
+      group: 'appearance',
+      label: 'Logo',
+      description: 'Site logo URL',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'favicon',
+      value: '/favicon.ico',
+      type: 'string' as const,
+      group: 'appearance',
+      label: 'Favicon',
+      description: 'Site favicon URL',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'seo_title',
+      value: 'Vyral CMS',
+      type: 'string' as const,
+      group: 'seo',
+      label: 'SEO Title',
+      description: 'Default SEO title',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'seo_description',
+      value: 'A modern content management system built with Next.js',
+      type: 'string' as const,
+      group: 'seo',
+      label: 'SEO Description',
+      description: 'Default SEO description',
+      isPublic: true,
+      isAutoload: true
+    },
+    {
+      key: 'google_analytics',
+      value: '',
+      type: 'string' as const,
+      group: 'analytics',
+      label: 'Google Analytics ID',
+      description: 'Google Analytics tracking ID',
+      isPublic: false,
+      isAutoload: true
+    },
+    {
+      key: 'facebook_pixel',
+      value: '',
+      type: 'string' as const,
+      group: 'analytics',
+      label: 'Facebook Pixel ID',
+      description: 'Facebook Pixel tracking ID',
+      isPublic: false,
+      isAutoload: true
+    },
+    {
+      key: 'maintenance_mode',
+      value: false,
+      type: 'boolean' as const,
+      group: 'system',
+      label: 'Maintenance Mode',
+      description: 'Enable maintenance mode',
+      isPublic: false,
+      isAutoload: true
+    },
+    {
+      key: 'maintenance_message',
+      value: 'Site is under maintenance. Please check back later.',
+      type: 'string' as const,
+      group: 'system',
+      label: 'Maintenance Message',
+      description: 'Message shown during maintenance',
       isPublic: false,
       isAutoload: true
     }
   ];
 
+  let created = 0;
+  let skipped = 0;
+
   for (const setting of defaultSettings) {
-    const existing = await this.getSettingByKey(setting.key);
-    if (!existing) {
-      await this.createSetting(setting);
+    try {
+      const existing = await this.getSettingByKey(setting.key);
+      
+      if (!existing) {
+        await this.setSettingValue(
+          setting.key,
+          setting.value,
+          {
+            type: setting.type,
+            group: setting.group,
+            label: setting.label,
+            description: setting.description,
+            isPublic: setting.isPublic,
+            isAutoload: setting.isAutoload,
+            validation: setting.validation || {}
+          }
+        );
+        created++;
+        this.logger.debug(`Created default setting: ${setting.key}`);
+      } else {
+        skipped++;
+        this.logger.debug(`Setting already exists: ${setting.key}`);
+      }
+    } catch (error: any) {
+      this.logger.error(`Failed to create setting ${setting.key}:`, error);
     }
   }
 
-  this.logger.info('Default settings initialized');
+  this.logger.info(`Initialized default settings: ${created} created, ${skipped} skipped`);
 }
 }

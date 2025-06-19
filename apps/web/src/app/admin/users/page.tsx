@@ -2,11 +2,12 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { UserService } from "@vyral/core";
 import { connectDB } from "@/lib/db";
-import { Badge, Button, Input, Skeleton } from "@vyral/ui";
-import { Card, CardContent } from "@vyral/ui";
-import { Avatar, AvatarFallback, AvatarImage } from "@vyral/ui";
 import { Plus, Search, Filter, Edit, Trash2, Shield, User } from "lucide-react";
-import { formatDate, formatRelativeTime } from "../../../../../../packages/plugin-sdk/src/utils/date-utils";
+import {
+  formatDate,
+  formatRelativeTime,
+} from "../../../../../../packages/plugin-sdk/src/utils/date-utils";
+import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Card, CardContent, Input, Skeleton } from "@/components/ui";
 
 interface UsersPageProps {
   searchParams: {

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardFooter, Skeleton } from "@vyral/ui";
+import { Card, CardContent, CardFooter, Skeleton } from "@/components/ui";
 
 export function PostCardSkeleton() {
   return (

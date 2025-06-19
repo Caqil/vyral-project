@@ -6,10 +6,10 @@ import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@vyral/ui";
-import { Input } from "@vyral/uiinput";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { Textarea } from "@vyral/uitextarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@vyral/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { Label } from "@vyral/uilabel";
 import {
   Select,

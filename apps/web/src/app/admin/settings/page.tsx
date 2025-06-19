@@ -1,16 +1,29 @@
 import { Suspense } from "react";
-import { Button, Input, Label, Separator, Skeleton, Switch, Textarea } from "@vyral/ui";
+import {
+  Button,
+  Input,
+  Label,
+  Separator,
+  Skeleton,
+  Switch,
+  Textarea,
+} from "@/components/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,  Select,
+  CardTitle,
+  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,Tabs, TabsContent, TabsList, TabsTrigger
-} from "@vyral/ui";
+  SelectValue,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui";
 import {
   Save,
   Upload,

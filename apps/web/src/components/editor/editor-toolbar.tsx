@@ -1,7 +1,7 @@
 "use client";
 
 import { type Editor } from "@tiptap/react";
-import { Button, cn } from "@vyral/ui";
+import { Button, cn } from "@/components/ui";
 import { Separator } from "@vyral/uiseparator";
 import {
   Bold,

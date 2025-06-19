@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminHeader } from "@/components/admin/header";
-import { LoadingSpinner } from "@vyral/ui";
+import { LoadingSpinner } from "@/components/ui";
 
 export default async function AdminLayout({
   children,

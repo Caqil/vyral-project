@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock, Eye, User } from "lucide-react";
 import { formatRelativeTime } from "../../../../packages/plugin-sdk/src/utils/date-utils";
-import { Badge, Card, CardContent, CardFooter } from "@vyral/ui";
-import { readingTime } from '../../../../packages/plugin-sdk/src/utils/string-utils';
+import { Badge, Card, CardContent, CardFooter } from "@/components/ui";
+import { readingTime } from "../../../../packages/plugin-sdk/src/utils/string-utils";
 
 interface PostCardProps {
   post: {

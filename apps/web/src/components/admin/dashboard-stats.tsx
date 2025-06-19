@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@vyral/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { FileText, Users, Eye, TrendingUp } from "lucide-react";
 
 interface DashboardStatsProps {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button, cn } from "@vyral/ui";
+import { Button } from "@/components/ui";
 import {
   LayoutDashboard,
   FileText,
@@ -16,6 +16,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },

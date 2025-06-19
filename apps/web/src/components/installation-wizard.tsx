@@ -29,7 +29,7 @@ import {
   Alert,
   AlertDescription,
   Progress,
-} from "@vyral/ui";
+} from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -186,11 +186,10 @@ const InstallationWizard = () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        toast("Purchase code verified!" );
+        toast("Purchase code verified!");
         setCurrentStep(1);
       } catch {
-        toast("Invalid purchase code."
-        );
+        toast("Invalid purchase code.");
       } finally {
         setIsLoading(false);
       }
@@ -212,17 +211,16 @@ const InstallationWizard = () => {
         validateField(field, formState[field as keyof FormState] as string)
       );
       if (!isValid || passwordStrength.score < 3) {
-        toast("Please fix all errors."
-          );
+        toast("Please fix all errors.");
         return;
       }
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        toast( "Vyral CMS installed successfully!" );
+        toast("Vyral CMS installed successfully!");
         setCurrentStep(4);
       } catch {
-        toast( "Installation failed." );
+        toast("Installation failed.");
         setCurrentStep(3);
       } finally {
         setIsLoading(false);
@@ -233,8 +231,7 @@ const InstallationWizard = () => {
 
   const nextStep = useCallback(() => {
     if (currentStep === 1 && !validateField("siteName", formState.siteName)) {
-      toast("Please enter a valid site name.",
-      );
+      toast("Please enter a valid site name.");
       return;
     }
     setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));

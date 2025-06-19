@@ -4,7 +4,13 @@ import { DashboardStats } from "@/components/admin/dashboard-stats";
 import { RecentActivity } from "@/components/admin/recent-activity";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { PostService, UserService } from "@vyral/core";
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from "@vyral/ui";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Skeleton,
+} from "@/components/ui";
 
 async function getDashboardData() {
   await connectDB();
