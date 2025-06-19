@@ -7,12 +7,14 @@ async function up() {
     await client.connect();
     const db = client.db();
     
+    console.log('🔄 Creating oauth_providers collection...');
+    
     // Create oauth_providers collection
     await db.createCollection('oauth_providers', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
-          required: ['name', 'slug', 'clientId'],
+          required: ['name', 'slug'],
           properties: {
             name: { bsonType: 'string' },
             slug: { bsonType: 'string' },
@@ -20,7 +22,9 @@ async function up() {
             clientSecret: { bsonType: 'string' },
             scopes: { bsonType: 'array' },
             enabled: { bsonType: 'bool' },
-            config: { bsonType: 'object' }
+            config: { bsonType: 'object' },
+            createdAt: { bsonType: 'date' },
+            updatedAt: { bsonType: 'date' }
           }
         }
       }
@@ -29,7 +33,8 @@ async function up() {
     // Create indexes
     await db.collection('oauth_providers').createIndexes([
       { key: { slug: 1 }, unique: true },
-      { key: { enabled: 1 } }
+      { key: { enabled: 1 } },
+      { key: { createdAt: 1 } }
     ]);
     
     console.log('✅ OAuth providers collection created');
@@ -45,6 +50,8 @@ async function down() {
   try {
     await client.connect();
     const db = client.db();
+    
+    console.log('🔄 Dropping oauth_providers collection...');
     await db.collection('oauth_providers').drop();
     console.log('✅ OAuth providers collection dropped');
   } finally {

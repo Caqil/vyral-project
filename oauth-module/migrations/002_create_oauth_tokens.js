@@ -7,6 +7,8 @@ async function up() {
     await client.connect();
     const db = client.db();
     
+    console.log('🔄 Creating oauth_tokens collection...');
+    
     // Create oauth_tokens collection
     await db.createCollection('oauth_tokens', {
       validator: {
@@ -14,14 +16,16 @@ async function up() {
           bsonType: 'object',
           required: ['userId', 'provider', 'accessToken'],
           properties: {
-            userId: { bsonType: 'objectId' },
+            userId: { bsonType: 'string' },
             provider: { bsonType: 'string' },
             providerId: { bsonType: 'string' },
             accessToken: { bsonType: 'string' },
             refreshToken: { bsonType: 'string' },
             expiresAt: { bsonType: 'date' },
             scopes: { bsonType: 'array' },
-            profile: { bsonType: 'object' }
+            profile: { bsonType: 'object' },
+            createdAt: { bsonType: 'date' },
+            updatedAt: { bsonType: 'date' }
           }
         }
       }
@@ -30,9 +34,10 @@ async function up() {
     // Create indexes
     await db.collection('oauth_tokens').createIndexes([
       { key: { userId: 1, provider: 1 }, unique: true },
-      { key: { provider: 1 } },
-      { key: { expiresAt: 1 } },
-      { key: { providerId: 1 } }
+      { key: { provider: 1, providerId: 1 } },
+      { key: { expiresAt: 1 }, expireAfterSeconds: 0 }, // TTL index for automatic cleanup
+      { key: { createdAt: 1 } },
+      { key: { userId: 1 } }
     ]);
     
     console.log('✅ OAuth tokens collection created');
@@ -48,6 +53,8 @@ async function down() {
   try {
     await client.connect();
     const db = client.db();
+    
+    console.log('🔄 Dropping oauth_tokens collection...');
     await db.collection('oauth_tokens').drop();
     console.log('✅ OAuth tokens collection dropped');
   } finally {

@@ -11,12 +11,6 @@
     "vyralVersion": "^1.0.0",
     "nodeVersion": ">=16.0.0"
   },
-  "dependencies": {
-    "axios": "^1.6.0"
-  },
-  "peerDependencies": {
-    "express": ">=4.18.0"
-  },
   "category": "security",
   "tags": ["oauth", "authentication", "social-login", "security", "users"],
   "icon": "/modules/oauth-auth/icon.png",
@@ -50,10 +44,16 @@
       "required": false
     },
     {
-      "name": "Automatic Dependency Management",
-      "description": "Dependencies are installed automatically during activation",
-      "enabled": true,
-      "required": true
+      "name": "Custom Scopes",
+      "description": "Configure OAuth scopes per provider",
+      "enabled": false,
+      "required": false
+    },
+    {
+      "name": "Webhook Support",
+      "description": "Handle OAuth provider webhooks",
+      "enabled": false,
+      "required": false
     }
   ],
   "permissions": [
@@ -75,7 +75,7 @@
       "path": "/api/oauth/auth/:provider",
       "handler": "initiateAuth",
       "permissions": ["oauth.authenticate"],
-      "description": "Initiate OAuth authentication flow"
+      "description": "Initiate OAuth authentication"
     },
     {
       "method": "GET",
@@ -93,42 +93,53 @@
     },
     {
       "method": "DELETE",
-      "path": "/api/oauth/revoke/:provider",
-      "handler": "revokeToken",
+      "path": "/api/oauth/disconnect/:provider",
+      "handler": "disconnectProvider",
       "permissions": ["oauth.authenticate"],
-      "description": "Revoke OAuth token"
+      "description": "Disconnect OAuth provider"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/oauth/stats",
+      "handler": "getOAuthStats",
+      "permissions": ["oauth.admin"],
+      "description": "Get OAuth usage statistics"
     }
+  ],
+  "dbMigrations": [
+    "001_create_oauth_providers.js",
+    "002_create_oauth_tokens.js",
+    "003_add_user_oauth_fields.js"
   ],
   "hooks": [
     {
-      "event": "user.login",
+      "event": "user:login",
       "handler": "onUserLogin",
-      "async": true
+      "priority": 10
     },
     {
-      "event": "user.registered",
+      "event": "user:registered",
       "handler": "onUserRegistered",
-      "async": true
+      "priority": 5
     },
     {
-      "event": "user.profile_updated",
+      "event": "user:profile-updated",
       "handler": "onProfileUpdated",
-      "async": true
+      "priority": 10
     }
   ],
   "requirements": {
-    "services": ["mongodb"],
-    "memory": "128MB",
+    "memory": "512MB",
     "storage": "50MB"
   },
   "settings": [
     {
       "key": "enabled_providers",
       "type": "multiselect",
-      "label": "Enabled Providers",
+      "label": "Enabled OAuth Providers",
       "description": "Select which OAuth providers to enable",
-      "default": ["google", "github"],
-      "required": true,
+      "default": [],
+      "required": false,
       "options": [
         { "label": "🔍 Google", "value": "google" },
         { "label": "🐙 GitHub", "value": "github" },
@@ -183,7 +194,7 @@
       "key": "google_client_id",
       "type": "string",
       "label": "Google Client ID",
-      "description": "Google OAuth 2.0 Client ID from Google Cloud Console",
+      "description": "Google OAuth 2.0 Client ID",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -193,7 +204,7 @@
       "key": "google_client_secret",
       "type": "string",
       "label": "Google Client Secret",
-      "description": "Google OAuth 2.0 Client Secret (keep this secure)",
+      "description": "Google OAuth 2.0 Client Secret",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -203,7 +214,7 @@
       "key": "github_client_id",
       "type": "string",
       "label": "GitHub Client ID",
-      "description": "GitHub OAuth App Client ID from Developer Settings",
+      "description": "GitHub OAuth App Client ID",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -223,7 +234,7 @@
       "key": "facebook_app_id",
       "type": "string",
       "label": "Facebook App ID",
-      "description": "Facebook App ID from Facebook Developers",
+      "description": "Facebook App ID",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -243,7 +254,7 @@
       "key": "twitter_client_id",
       "type": "string",
       "label": "Twitter Client ID",
-      "description": "Twitter API Client ID from Developer Portal",
+      "description": "Twitter API Client ID",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -263,7 +274,7 @@
       "key": "discord_client_id",
       "type": "string",
       "label": "Discord Client ID",
-      "description": "Discord Application Client ID from Developer Portal",
+      "description": "Discord Application Client ID",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -283,7 +294,7 @@
       "key": "linkedin_client_id",
       "type": "string",
       "label": "LinkedIn Client ID",
-      "description": "LinkedIn App Client ID from LinkedIn Developers",
+      "description": "LinkedIn App Client ID",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -301,7 +312,7 @@
     }
   ],
   "defaultConfig": {
-    "enabled_providers": ["google", "github"],
+    "enabled_providers": [],
     "auto_create_users": true,
     "allow_account_linking": true,
     "require_email_verification": false,
@@ -320,21 +331,7 @@
     "linkedin_client_secret": ""
   },
   "main": "index.js",
-  "installScript": "install.js",
   "uninstallScript": "uninstall.js",
   "supportUrl": "https://vyral.com/docs/modules/oauth",
-  "documentationUrl": "https://vyral.com/docs/modules/oauth",
-  "vyralModule": {
-    "autoInstallDeps": true,
-    "requiresRestart": false,
-    "healthCheck": {
-      "endpoint": "/api/oauth/health",
-      "interval": 300000
-    },
-    "installation": {
-      "runPostInstall": true,
-      "validateAfterInstall": true,
-      "cleanupOnFailure": true
-    }
-  }
+  "documentationUrl": "https://vyral.com/docs/modules/oauth"
 }

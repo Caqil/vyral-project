@@ -9,7 +9,35 @@ const moduleManager = new ModuleManager();
 // GET /api/admin/modules - List all modules
 export async function GET(request: NextRequest) {
   console.log('📡 API: Starting modules fetch...');
-  
+  const { searchParams } = new URL(request.url);
+const page = parseInt(searchParams.get('page') || '1');
+const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+const status = searchParams.get('status');
+const category = searchParams.get('category');
+const slug = searchParams.get('slug'); // NEW: Add slug parameter
+
+// Build query filters
+const filters: any = {};
+
+if (status && status !== 'all') {
+  filters.status = status;
+}
+
+if (category && category !== 'all') {
+  filters['manifest.category'] = category;
+}
+
+// NEW: Add slug filter
+if (slug) {
+  filters['manifest.slug'] = slug;
+}
+
+// Then use filters in the query:
+const modules = await moduleManager.findOne(filters, {
+  page,
+  limit,
+  sort: { 'manifest.name': 1 }
+});
   try {
     const session = await getServerSession(authOptions);
     console.log('👤 Session check:', { 
