@@ -1,0 +1,56 @@
+{
+  "name": "@vyral/simple-analytics",
+  "version": "1.0.0",
+  "description": "Simple analytics plugin to track page views and generate basic statistics",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "keywords": [
+    "vyral",
+    "plugin",
+    "analytics",
+    "tracking",
+    "statistics"
+  ],
+  "author": "Vyral Team",
+  "license": "MIT",
+  "homepage": "https://github.com/vyral/plugins/simple-analytics",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vyral/plugins.git",
+    "directory": "plugins/simple-analytics"
+  },
+  "bugs": {
+    "url": "https://github.com/vyral/plugins/issues"
+  },
+  "peerDependencies": {
+    "@vyral/plugin-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist",
+    "components",
+    "assets",
+    "locales",
+    "README.md",
+    "plugin.config.json"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

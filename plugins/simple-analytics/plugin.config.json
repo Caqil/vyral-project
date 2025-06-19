@@ -1,0 +1,255 @@
+{
+  "name": "simple-analytics",
+  "version": "1.0.0",
+  "displayName": "Simple Analytics",
+  "description": "Track page views and generate basic statistics for your website content.",
+  "author": "Vyral Team",
+  "homepage": "https://github.com/vyral/plugins/simple-analytics",
+  "license": "MIT",
+  "vyralVersion": "^1.0.0",
+  "category": "Analytics",
+  "tags": [
+    "analytics",
+    "tracking",
+    "statistics",
+    "dashboard",
+    "metrics"
+  ],
+  "icon": "BarChart",
+  "screenshots": [
+    "screenshots/dashboard.png",
+    "screenshots/analytics-page.png",
+    "screenshots/settings.png"
+  ],
+  "hooks": [
+    "content:after-view",
+    "admin:dashboard-widgets"
+  ],
+  "adminPages": [
+    {
+      "title": "Analytics",
+      "slug": "analytics",
+      "component": "AnalyticsPage",
+      "icon": "BarChart",
+      "permission": "analytics.view"
+    }
+  ],
+  "apiRoutes": [
+    {
+      "path": "/stats/overview",
+      "method": "GET",
+      "handler": "getOverviewStats",
+      "permission": "analytics.view"
+    },
+    {
+      "path": "/stats/daily",
+      "method": "GET", 
+      "handler": "getDailyStats",
+      "permission": "analytics.view"
+    },
+    {
+      "path": "/stats/popular",
+      "method": "GET",
+      "handler": "getPopularContent", 
+      "permission": "analytics.view"
+    }
+  ],
+  "settings": [
+    {
+      "key": "track_anonymous",
+      "label": "Track Anonymous Users",
+      "type": "boolean",
+      "default": true,
+      "description": "Track page views from anonymous (non-logged-in) users",
+      "category": "tracking"
+    },
+    {
+      "key": "retention_days",
+      "label": "Data Retention (Days)",
+      "type": "number",
+      "default": 365,
+      "min": 30,
+      "max": 1095,
+      "description": "How long to keep analytics data (30-1095 days)",
+      "category": "storage"
+    },
+    {
+      "key": "exclude_admin",
+      "label": "Exclude Admin Users",
+      "type": "boolean",
+      "default": true,
+      "description": "Exclude page views from admin users",
+      "category": "tracking"
+    },
+    {
+      "key": "track_downloads",
+      "label": "Track File Downloads",
+      "type": "boolean",
+      "default": false,
+      "description": "Track downloads of files and media",
+      "category": "tracking"
+    },
+    {
+      "key": "anonymize_ip",
+      "label": "Anonymize IP Addresses",
+      "type": "boolean",
+      "default": true,
+      "description": "Anonymize IP addresses for privacy compliance",
+      "category": "privacy"
+    },
+    {
+      "key": "dashboard_widget",
+      "label": "Show Dashboard Widget",
+      "type": "boolean",
+      "default": true,
+      "description": "Display analytics widget on the admin dashboard",
+      "category": "display"
+    },
+    {
+      "key": "email_reports",
+      "label": "Email Weekly Reports",
+      "type": "boolean",
+      "default": false,
+      "description": "Send weekly analytics reports via email",
+      "category": "notifications"
+    },
+    {
+      "key": "report_email",
+      "label": "Report Email Address",
+      "type": "email",
+      "default": "",
+      "description": "Email address to send analytics reports to",
+      "category": "notifications",
+      "conditional": {
+        "key": "email_reports",
+        "value": true
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "key": "analytics.view",
+      "label": "View Analytics",
+      "description": "Allow viewing analytics data and reports"
+    },
+    {
+      "key": "analytics.export",
+      "label": "Export Analytics",
+      "description": "Allow exporting analytics data to various formats"
+    },
+    {
+      "key": "analytics.manage",
+      "label": "Manage Analytics",
+      "description": "Allow managing analytics settings and configuration"
+    }
+  ],
+  "dependencies": [],
+  "optionalDependencies": [
+    "mail-service"
+  ],
+  "database": {
+    "collections": [
+      {
+        "name": "page_views",
+        "description": "Individual page view records",
+        "indexes": [
+          {
+            "fields": {
+              "postId": 1,
+              "timestamp": -1
+            }
+          },
+          {
+            "fields": {
+              "date": 1
+            }
+          },
+          {
+            "fields": {
+              "timestamp": -1
+            }
+          }
+        ]
+      },
+      {
+        "name": "daily_stats",
+        "description": "Aggregated daily statistics",
+        "indexes": [
+          {
+            "fields": {
+              "date": 1
+            },
+            "unique": true
+          }
+        ]
+      }
+    ]
+  },
+  "assets": [
+    {
+      "type": "css",
+      "file": "assets/analytics.css",
+      "admin": true
+    },
+    {
+      "type": "js",
+      "file": "assets/analytics.js",
+      "admin": true
+    }
+  ],
+  "components": [
+    {
+      "name": "AnalyticsPage",
+      "type": "admin-page",
+      "file": "components/AnalyticsPage.tsx"
+    },
+    {
+      "name": "AnalyticsWidget",
+      "type": "dashboard-widget",
+      "file": "components/AnalyticsWidget.tsx"
+    },
+    {
+      "name": "StatsChart",
+      "type": "component",
+      "file": "components/StatsChart.tsx"
+    }
+  ],
+  "localization": {
+    "defaultLocale": "en",
+    "locales": [
+      "en",
+      "es",
+      "fr",
+      "de"
+    ],
+    "files": {
+      "en": "locales/en.json",
+      "es": "locales/es.json",
+      "fr": "locales/fr.json",
+      "de": "locales/de.json"
+    }
+  },
+  "compatibility": {
+    "vyral": "^1.0.0",
+    "node": ">=18.0.0",
+    "browsers": [
+      "Chrome >= 90",
+      "Firefox >= 88",
+      "Safari >= 14",
+      "Edge >= 90"
+    ]
+  },
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2024-12-15",
+      "changes": [
+        "Initial release",
+        "Basic page view tracking",
+        "Dashboard widget integration",
+        "Admin analytics page",
+        "Configurable retention settings"
+      ]
+    }
+  ]
+}

@@ -25,7 +25,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true
+    "incremental": true,
+    "declaration": true,
+    "declarationMap": true
   },
   "include": [
     "src/**/*"
