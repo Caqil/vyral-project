@@ -1,4 +1,4 @@
-// apps/web/src/lib/plugin-manager.ts
+
 interface PluginMenuItem {
   title: string;
   slug: string;

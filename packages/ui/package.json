@@ -15,8 +15,7 @@
       "import": "./dist/lib/index.mjs",
       "require": "./dist/lib/index.js",
       "types": "./dist/lib/index.d.ts"
-    },
-    "./styles": "./dist/index.css"
+    }
   },
   "files": [
     "dist/**"

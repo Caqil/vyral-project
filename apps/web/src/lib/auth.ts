@@ -1,9 +1,34 @@
-import { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions, DefaultSession, DefaultUser } from 'next-auth';
 import { MongoDBAdapter } from '@next-auth/mongodb-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoClient } from 'mongodb';
 import { connectDB } from './db';
 import { UserService } from '../../../../packages/core/src/services/user';
+
+// Extend NextAuth types to include custom properties
+declare module 'next-auth' {
+  interface User extends DefaultUser {
+    role?: string;
+    username?: string;
+  }
+  interface Session {
+    user: {
+      id: string;
+      role?: string;
+      username?: string;
+      email?: string | null;
+      name?: string | null;
+      image?: string | null;
+    };
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    role?: string;
+    username?: string;
+  }
+}
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 const clientPromise = client.connect();
@@ -72,7 +97,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
     error: '/auth/error',
   },
   debug: process.env.NODE_ENV === 'development',

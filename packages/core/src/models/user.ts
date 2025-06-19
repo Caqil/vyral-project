@@ -135,8 +135,6 @@ const UserSchema = createBaseSchema({
 });
 
 // Indexes
-UserSchema.index({ username: 1 });
-UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ status: 1 });
 UserSchema.index({ displayName: 'text', bio: 'text' });

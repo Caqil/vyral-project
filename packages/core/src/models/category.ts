@@ -62,8 +62,6 @@ const CategorySchema = createBaseSchema({
 });
 
 // Indexes
-CategorySchema.index({ slug: 1 });
-CategorySchema.index({ parent: 1 });
 CategorySchema.index({ order: 1 });
 CategorySchema.index({ name: 'text', description: 'text' });
 

@@ -138,7 +138,6 @@ const PostSchema = createBaseSchema({
 });
 
 // Indexes
-PostSchema.index({ slug: 1 });
 PostSchema.index({ status: 1, publishedAt: -1 });
 PostSchema.index({ type: 1, status: 1 });
 PostSchema.index({ author: 1, status: 1 });

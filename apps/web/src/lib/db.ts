@@ -1,5 +1,4 @@
-import Database from '../../../../packages/core/dist/database/connection';
-
+import Database from '../../../../packages/core/src/database/connection';
 
 
 let isConnected = false;

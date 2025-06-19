@@ -46,7 +46,6 @@ const TagSchema = createBaseSchema({
 });
 
 // Indexes
-TagSchema.index({ slug: 1 });
 TagSchema.index({ name: 'text', description: 'text' });
 
 // Virtual for URL

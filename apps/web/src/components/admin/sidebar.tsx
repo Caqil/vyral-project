@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@ui/src/lib";
-import { Button } from "@vyral/ui";
+import { Button, cn } from "@vyral/ui";
 import {
   LayoutDashboard,
   FileText,

@@ -63,9 +63,7 @@ const SettingSchema = createBaseSchema({
 });
 
 // Indexes
-SettingSchema.index({ key: 1 });
 SettingSchema.index({ group: 1, isAutoload: 1 });
-SettingSchema.index({ isPublic: 1 });
 SettingSchema.index({ label: 'text', description: 'text' });
 
 // Virtual for serialized value (for complex types)

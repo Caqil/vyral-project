@@ -107,7 +107,6 @@ const NavigationSchema = createBaseSchema({
 });
 
 // Indexes
-NavigationSchema.index({ slug: 1 });
 NavigationSchema.index({ location: 1, isActive: 1 });
 NavigationSchema.index({ name: 'text' });
 

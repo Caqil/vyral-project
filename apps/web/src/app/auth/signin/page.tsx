@@ -7,9 +7,6 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@vyral/ui";
-import { Input } from "@vyral/uiinput";
-import { Label } from "@vyral/uilabel";
 import {
   Card,
   CardContent,
@@ -17,8 +14,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Label,
 } from "@vyral/ui";
-import { Alert, AlertDescription } from "@vyral/uialert";
+import { Alert, AlertDescription,Input,Button } from "@vyral/ui";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { toast } from "sonner";
 

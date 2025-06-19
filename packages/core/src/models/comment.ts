@@ -91,7 +91,6 @@ const CommentSchema = createBaseSchema({
 
 // Indexes
 CommentSchema.index({ postId: 1, status: 1 });
-CommentSchema.index({ parentId: 1 });
 CommentSchema.index({ status: 1, createdAt: -1 });
 CommentSchema.index({ 'author.email': 1 });
 CommentSchema.index({ 'author.userId': 1 });

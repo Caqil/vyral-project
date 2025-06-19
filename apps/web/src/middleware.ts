@@ -1,18 +1,6 @@
-
+// apps/web/src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-// Routes that should be accessible during installation
-const INSTALLATION_ROUTES = [
-  '/install',
-  '/install/verify',
-  '/install/setup',
-  '/install/complete',
-  '/api/install',
-  '/api/install/verify-purchase',
-  '/api/install/setup',
-  '/api/install/status'
-];
 
 // Static assets and API routes that should always be accessible
 const ALWAYS_ACCESSIBLE = [
@@ -21,7 +9,8 @@ const ALWAYS_ACCESSIBLE = [
   '/images',
   '/icons',
   '/api/health',
-  '/api/status'
+  '/api/status',
+  '/api/auto-seed'
 ];
 
 // Admin routes that need special protection
@@ -38,9 +27,6 @@ const DEV_ROUTES = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Check if system is installed using environment variable (Edge Runtime compatible)
-  const isInstalled = process.env.VYRAL_INSTALLED === 'true';
-
   // Always allow static assets and basic API routes
   if (ALWAYS_ACCESSIBLE.some(route => pathname.startsWith(route))) {
     return NextResponse.next();
@@ -52,58 +38,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If not installed, handle installation flow
-  if (!isInstalled) {
-    return handleInstallationFlow(request);
-  }
-
-  // If installed, handle normal application flow
-  return handleNormalFlow(request);
-}
-
-function handleInstallationFlow(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Allow installation routes
-  if (INSTALLATION_ROUTES.some(route => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
-
-  // Block admin routes during installation
-  if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
-    return redirectToInstallation(request);
-  }
-
-  // Block all other routes and redirect to installation
-  if (pathname !== '/install') {
-    return redirectToInstallation(request);
-  }
-
-  return NextResponse.next();
-}
-
-function handleNormalFlow(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Block access to installation routes after installation
-  if (INSTALLATION_ROUTES.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  // Additional security checks for admin routes
+  // Handle admin routes with enhanced security
   if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
     return handleAdminAccess(request);
   }
 
-  return NextResponse.next();
+  // Handle all other routes normally
+  return handleNormalFlow(request);
 }
 
-function handleAdminAccess(request: NextRequest) {
-  // Additional security headers for admin routes
+function handleNormalFlow(request: NextRequest) {
+  // Add basic security headers for all routes
   const response = NextResponse.next();
   
-  // Add security headers
-  response.headers.set('X-Frame-Options', 'DENY');
+  // Add general security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -111,24 +59,45 @@ function handleAdminAccess(request: NextRequest) {
   return response;
 }
 
-function redirectToInstallation(request: NextRequest) {
-  const installUrl = new URL('/install', request.url);
+function handleAdminAccess(request: NextRequest) {
+  // Enhanced security headers for admin routes
+  const response = NextResponse.next();
   
-  // Preserve the original URL for after installation
-  if (request.nextUrl.pathname !== '/') {
-    installUrl.searchParams.set('redirect', request.nextUrl.pathname);
+  // Add strict security headers for admin
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  
+  // Add Content Security Policy for admin pages
+  response.headers.set('Content-Security-Policy', getAdminCSP());
+  
+  // Check for suspicious headers or parameters
+  if (!verifyRequestIntegrity(request)) {
+    console.warn('Suspicious admin access attempt blocked');
+    return NextResponse.redirect(new URL('/', request.url));
   }
   
-  return NextResponse.redirect(installUrl);
+  // Check rate limiting for admin routes
+  if (!checkAdminRateLimit(request)) {
+    console.warn('Admin rate limit exceeded');
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429 }
+    );
+  }
+  
+  return response;
 }
 
 // Anti-tampering checks
-function verifyInstallationIntegrity(request: NextRequest): boolean {
+function verifyRequestIntegrity(request: NextRequest): boolean {
   try {
     // Check for common tampering attempts
     const suspiciousHeaders = [
       'x-vyral-bypass',
-      'x-install-override',
+      'x-admin-override',
       'x-force-access'
     ];
 
@@ -141,9 +110,10 @@ function verifyInstallationIntegrity(request: NextRequest): boolean {
 
     // Check for suspicious query parameters
     const suspiciousParams = [
-      'bypass_install',
+      'bypass_auth',
       'force_access',
-      'override_check'
+      'override_check',
+      'admin_bypass'
     ];
 
     for (const param of suspiciousParams) {
@@ -159,33 +129,67 @@ function verifyInstallationIntegrity(request: NextRequest): boolean {
   }
 }
 
-// Rate limiting for installation attempts (Edge Runtime compatible)
-const installAttempts = new Map<string, { count: number; lastAttempt: number }>();
+// Rate limiting for admin routes (Edge Runtime compatible)
+const adminAttempts = new Map<string, { count: number; lastAttempt: number }>();
 
-function checkInstallRateLimit(request: NextRequest): boolean {
-  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+function checkAdminRateLimit(request: NextRequest): boolean {
+  const ip = request.headers.get('x-forwarded-for') || 
+            request.headers.get('x-real-ip') || 
+            'unknown';
   const now = Date.now();
-  const attempts = installAttempts.get(ip);
+  const attempts = adminAttempts.get(ip);
 
   if (!attempts) {
-    installAttempts.set(ip, { count: 1, lastAttempt: now });
+    adminAttempts.set(ip, { count: 1, lastAttempt: now });
     return true;
   }
 
-  // Reset after 1 hour
-  if (now - attempts.lastAttempt > 3600000) {
-    installAttempts.set(ip, { count: 1, lastAttempt: now });
+  // Reset after 15 minutes
+  if (now - attempts.lastAttempt > 900000) {
+    adminAttempts.set(ip, { count: 1, lastAttempt: now });
     return true;
   }
 
-  // Max 10 installation attempts per hour
-  if (attempts.count >= 10) {
+  // Max 100 admin requests per 15 minutes
+  if (attempts.count >= 100) {
     return false;
   }
 
   attempts.count++;
   attempts.lastAttempt = now;
   return true;
+}
+
+// Content Security Policy for admin pages
+function getAdminCSP(): string {
+  return [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join('; ');
+}
+
+// Clean up old rate limit entries periodically
+function cleanupRateLimitMap() {
+  const now = Date.now();
+  const cutoff = now - 900000; // 15 minutes
+  
+  for (const [ip, data] of adminAttempts.entries()) {
+    if (data.lastAttempt < cutoff) {
+      adminAttempts.delete(ip);
+    }
+  }
+}
+
+// Run cleanup every 5 minutes
+if (typeof globalThis !== 'undefined') {
+  setInterval(cleanupRateLimitMap, 300000);
 }
 
 export const config = {
@@ -201,7 +205,7 @@ export const config = {
   ],
 };
 
-// Additional utility functions for enhanced security
+// Utility functions for enhanced security
 export function generateCSRFToken(): string {
   return Math.random().toString(36).substring(2, 15) + 
          Math.random().toString(36).substring(2, 15);
@@ -211,17 +215,8 @@ export function validateCSRFToken(token: string, storedToken: string): boolean {
   return token === storedToken;
 }
 
-// Content Security Policy for installation pages
-export function getInstallationCSP(): string {
-  return [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https:",
-    "font-src 'self'",
-    "connect-src 'self'",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'"
-  ].join('; ');
+// Utility to check if request is from localhost (for development)
+export function isLocalhost(request: NextRequest): boolean {
+  const host = request.headers.get('host') || '';
+  return host.includes('localhost') || host.includes('127.0.0.1');
 }
