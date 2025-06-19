@@ -183,12 +183,6 @@ media/
 *.backup
 *.old
 
-# Plugin/Theme development files
-plugins/*/dist/
-themes/*/dist/
-plugins/*/build/
-themes/*/build/
-
 # Test files
 test-results/
 playwright-report/

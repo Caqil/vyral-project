@@ -1,13 +1,19 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { UserService } from "@vyral/core";
 import { connectDB } from "@/lib/db";
 import { Plus, Search, Filter, Edit, Trash2, Shield, User } from "lucide-react";
 import {
-  formatDate,
-  formatRelativeTime,
-} from "../../../../../../packages/plugin-sdk/src/utils/date-utils";
-import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Card, CardContent, Input, Skeleton } from "@/components/ui";
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Skeleton,
+} from "@/components/ui";
+import { UserService } from "../../../../../../packages/core/src";
 
 interface UsersPageProps {
   searchParams: {
@@ -136,20 +142,6 @@ async function UsersTable({
                       <p className="text-muted-foreground text-sm">
                         @{user.username} • {user.email}
                       </p>
-
-                      <div className="flex items-center space-x-4 text-xs text-muted-foreground mt-2">
-                        <span>Joined {formatDate(user.createdAt)}</span>
-                        {user.lastLogin && (
-                          <>
-                            <span>•</span>
-                            <span>
-                              Last login {formatRelativeTime(user.lastLogin)}
-                            </span>
-                          </>
-                        )}
-                        <span>•</span>
-                        <span>{user.loginCount || 0} logins</span>
-                      </div>
                     </div>
                   </div>
 

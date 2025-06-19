@@ -1,6 +1,5 @@
-
+import { Button } from "@/components/ui";
 import Link from "next/link";
-import { Button } from '@vyral/ui';
 
 export default function HomePage() {
   return (
