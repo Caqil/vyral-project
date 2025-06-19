@@ -1,4 +1,6 @@
-import Database from '../../../../packages/core/src/database/connection';
+import { Database } from "node_modules/@vyral/core/src";
+
+
 
 
 let isConnected = false;
@@ -11,13 +13,7 @@ export async function connectDB() {
   try {
     const db = Database.getInstance();
     await db.connect({
-      uri: process.env.MONGODB_URI!,
-      options: {
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-        family: 4,
-      }
+      uri: process.env.MONGODB_URI!
     });
     
     isConnected = true;

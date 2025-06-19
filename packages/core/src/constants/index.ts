@@ -79,7 +79,8 @@ export const ROLE_PERMISSIONS = {
     'content.create', 'content.read', 'content.update', 'content.delete', 'content.publish',
     'users.create', 'users.read', 'users.update', 'users.delete',
     'media.upload', 'media.delete', 'media.manage',
-    'settings.read', 'settings.update'
+    'settings.read', 'settings.update',
+    'plugins.manage'
   ],
   editor: [
     'content.create', 'content.read', 'content.update', 'content.delete', 'content.publish',
