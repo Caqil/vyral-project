@@ -24,9 +24,6 @@ const navigation = [
   { name: "Pages", href: "/admin/pages", icon: FileText },
   { name: "Media", href: "/admin/media", icon: Image },
   { name: "Users", href: "/admin/users", icon: Users },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { name: "Plugins", href: "/admin/plugins", icon: Puzzle },
-  { name: "Themes", href: "/admin/themes", icon: Palette },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

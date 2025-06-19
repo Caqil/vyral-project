@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import { connectDB } from "@/lib/db";
 import { DashboardStats } from "@/components/admin/dashboard-stats";
-import { RecentActivity } from "@/components/admin/recent-activity";
 import { QuickActions } from "@/components/admin/quick-actions";
-import { PostService, UserService } from "@vyral/core";
 import {
   Card,
   CardContent,
@@ -11,6 +9,7 @@ import {
   CardTitle,
   Skeleton,
 } from "@/components/ui";
+import { PostService, UserService } from "@vyral/core";
 
 async function getDashboardData() {
   await connectDB();
@@ -81,7 +80,6 @@ async function DashboardData() {
 
         <div className="col-span-3 space-y-6">
           <QuickActions />
-          <RecentActivity />
         </div>
       </div>
     </>
