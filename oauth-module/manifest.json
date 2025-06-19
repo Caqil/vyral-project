@@ -11,6 +11,12 @@
     "vyralVersion": "^1.0.0",
     "nodeVersion": ">=16.0.0"
   },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "peerDependencies": {
+    "express": ">=4.18.0"
+  },
   "category": "security",
   "tags": ["oauth", "authentication", "social-login", "security", "users"],
   "icon": "/modules/oauth-auth/icon.png",
@@ -44,16 +50,10 @@
       "required": false
     },
     {
-      "name": "Custom Scopes",
-      "description": "Configure OAuth scopes per provider",
-      "enabled": false,
-      "required": false
-    },
-    {
-      "name": "Webhook Support",
-      "description": "Handle OAuth provider webhooks",
-      "enabled": false,
-      "required": false
+      "name": "Automatic Dependency Management",
+      "description": "Dependencies are installed automatically during activation",
+      "enabled": true,
+      "required": true
     }
   ],
   "permissions": [
@@ -75,7 +75,7 @@
       "path": "/api/oauth/auth/:provider",
       "handler": "initiateAuth",
       "permissions": ["oauth.authenticate"],
-      "description": "Initiate OAuth authentication"
+      "description": "Initiate OAuth authentication flow"
     },
     {
       "method": "GET",
@@ -93,50 +93,39 @@
     },
     {
       "method": "DELETE",
-      "path": "/api/oauth/disconnect/:provider",
-      "handler": "disconnectProvider",
+      "path": "/api/oauth/revoke/:provider",
+      "handler": "revokeToken",
       "permissions": ["oauth.authenticate"],
-      "description": "Disconnect OAuth provider"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin/oauth/stats",
-      "handler": "getOAuthStats",
-      "permissions": ["oauth.admin"],
-      "description": "Get OAuth usage statistics"
+      "description": "Revoke OAuth token"
     }
-  ],
-  "dbMigrations": [
-    "001_create_oauth_providers.js",
-    "002_create_oauth_tokens.js",
-    "003_add_user_oauth_fields.js"
   ],
   "hooks": [
     {
-      "event": "user:login",
+      "event": "user.login",
       "handler": "onUserLogin",
-      "priority": 10
+      "async": true
     },
     {
-      "event": "user:registered",
+      "event": "user.registered",
       "handler": "onUserRegistered",
-      "priority": 5
+      "async": true
     },
     {
-      "event": "user:profile-updated",
+      "event": "user.profile_updated",
       "handler": "onProfileUpdated",
-      "priority": 10
+      "async": true
     }
   ],
   "requirements": {
-    "memory": "512MB",
+    "services": ["mongodb"],
+    "memory": "128MB",
     "storage": "50MB"
   },
   "settings": [
     {
       "key": "enabled_providers",
       "type": "multiselect",
-      "label": "Enabled OAuth Providers",
+      "label": "Enabled Providers",
       "description": "Select which OAuth providers to enable",
       "default": ["google", "github"],
       "required": true,
@@ -194,7 +183,7 @@
       "key": "google_client_id",
       "type": "string",
       "label": "Google Client ID",
-      "description": "Google OAuth 2.0 Client ID",
+      "description": "Google OAuth 2.0 Client ID from Google Cloud Console",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -204,7 +193,7 @@
       "key": "google_client_secret",
       "type": "string",
       "label": "Google Client Secret",
-      "description": "Google OAuth 2.0 Client Secret",
+      "description": "Google OAuth 2.0 Client Secret (keep this secure)",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -214,7 +203,7 @@
       "key": "github_client_id",
       "type": "string",
       "label": "GitHub Client ID",
-      "description": "GitHub OAuth App Client ID",
+      "description": "GitHub OAuth App Client ID from Developer Settings",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -234,7 +223,7 @@
       "key": "facebook_app_id",
       "type": "string",
       "label": "Facebook App ID",
-      "description": "Facebook App ID",
+      "description": "Facebook App ID from Facebook Developers",
       "default": "",
       "required": false,
       "dependsOn": "enabled_providers",
@@ -249,6 +238,66 @@
       "required": false,
       "dependsOn": "enabled_providers",
       "group": "facebook"
+    },
+    {
+      "key": "twitter_client_id",
+      "type": "string",
+      "label": "Twitter Client ID",
+      "description": "Twitter API Client ID from Developer Portal",
+      "default": "",
+      "required": false,
+      "dependsOn": "enabled_providers",
+      "group": "twitter"
+    },
+    {
+      "key": "twitter_client_secret",
+      "type": "string",
+      "label": "Twitter Client Secret",
+      "description": "Twitter API Client Secret",
+      "default": "",
+      "required": false,
+      "dependsOn": "enabled_providers",
+      "group": "twitter"
+    },
+    {
+      "key": "discord_client_id",
+      "type": "string",
+      "label": "Discord Client ID",
+      "description": "Discord Application Client ID from Developer Portal",
+      "default": "",
+      "required": false,
+      "dependsOn": "enabled_providers",
+      "group": "discord"
+    },
+    {
+      "key": "discord_client_secret",
+      "type": "string",
+      "label": "Discord Client Secret",
+      "description": "Discord Application Client Secret",
+      "default": "",
+      "required": false,
+      "dependsOn": "enabled_providers",
+      "group": "discord"
+    },
+    {
+      "key": "linkedin_client_id",
+      "type": "string",
+      "label": "LinkedIn Client ID",
+      "description": "LinkedIn App Client ID from LinkedIn Developers",
+      "default": "",
+      "required": false,
+      "dependsOn": "enabled_providers",
+      "group": "linkedin"
+    },
+    {
+      "key": "linkedin_client_secret",
+      "type": "string",
+      "label": "LinkedIn Client Secret",
+      "description": "LinkedIn App Client Secret",
+      "default": "",
+      "required": false,
+      "dependsOn": "enabled_providers",
+      "group": "linkedin"
     }
   ],
   "defaultConfig": {
@@ -262,10 +311,30 @@
     "github_client_id": "",
     "github_client_secret": "",
     "facebook_app_id": "",
-    "facebook_app_secret": ""
+    "facebook_app_secret": "",
+    "twitter_client_id": "",
+    "twitter_client_secret": "",
+    "discord_client_id": "",
+    "discord_client_secret": "",
+    "linkedin_client_id": "",
+    "linkedin_client_secret": ""
   },
   "main": "index.js",
+  "installScript": "install.js",
   "uninstallScript": "uninstall.js",
   "supportUrl": "https://vyral.com/docs/modules/oauth",
-  "documentationUrl": "https://vyral.com/docs/modules/oauth"
+  "documentationUrl": "https://vyral.com/docs/modules/oauth",
+  "vyralModule": {
+    "autoInstallDeps": true,
+    "requiresRestart": false,
+    "healthCheck": {
+      "endpoint": "/api/oauth/health",
+      "interval": 300000
+    },
+    "installation": {
+      "runPostInstall": true,
+      "validateAfterInstall": true,
+      "cleanupOnFailure": true
+    }
+  }
 }

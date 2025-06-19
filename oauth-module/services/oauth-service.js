@@ -109,6 +109,48 @@ class OAuthService {
 
     return providerInstance.getConfig();
   }
+
+  // Additional helper methods
+  validateProvider(provider) {
+    return Object.keys(this.providers).includes(provider);
+  }
+
+  getAvailableProviders() {
+    return Object.keys(this.providers);
+  }
+
+  async verifyToken(provider, token) {
+    const providerInstance = this.providers[provider];
+    if (!providerInstance) {
+      throw new Error(`Provider ${provider} not found`);
+    }
+
+    if (typeof providerInstance.verifyToken === 'function') {
+      return await providerInstance.verifyToken(token);
+    }
+
+    // Fallback: try to get user profile to verify token
+    try {
+      const profile = await this.getUserProfile(provider, token);
+      return !!profile;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async revokeToken(provider, token) {
+    const providerInstance = this.providers[provider];
+    if (!providerInstance) {
+      throw new Error(`Provider ${provider} not found`);
+    }
+
+    if (typeof providerInstance.revokeToken === 'function') {
+      return await providerInstance.revokeToken(token);
+    }
+
+    console.warn(`Provider ${provider} does not support token revocation`);
+    return false;
+  }
 }
 
 module.exports = OAuthService;

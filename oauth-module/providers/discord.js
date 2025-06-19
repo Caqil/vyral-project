@@ -3,33 +3,39 @@ const querystring = require('querystring');
 
 class DiscordProvider {
   constructor(config) {
-    this.config = config;
-    this.authUrl = 'https://discord.com/api/oauth2/authorize';
+    this.clientId = config.clientId;
+    this.clientSecret = config.clientSecret;
+    this.authUrl = 'https://discord.com/oauth2/authorize';
     this.tokenUrl = 'https://discord.com/api/oauth2/token';
-    this.userInfoUrl = 'https://discord.com/api/users/@me';
+    this.profileUrl = 'https://discord.com/api/users/@me';
+    this.scopes = ['identify', 'email'];
   }
 
   getAuthorizationUrl(options = {}) {
     const params = {
-      client_id: this.config.clientId,
-      redirect_uri: options.redirect_uri || `${process.env.NEXTAUTH_URL}/api/oauth/callback/discord`,
+      client_id: this.clientId,
       response_type: 'code',
-      scope: 'identify email',
-      state: options.state
+      scope: options.scope || this.scopes.join(' '),
+      redirect_uri: options.redirect_uri,
+      state: options.state,
+      prompt: 'consent'
     };
 
-    return `${this.authUrl}?${querystring.stringify(params)}`;
+    const queryStr = querystring.stringify(params);
+    return `${this.authUrl}?${queryStr}`;
   }
 
   async exchangeCodeForToken(code, options = {}) {
     try {
-      const response = await axios.post(this.tokenUrl, querystring.stringify({
-        client_id: this.config.clientId,
-        client_secret: this.config.clientSecret,
+      const data = {
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
         grant_type: 'authorization_code',
-        code,
-        redirect_uri: options.redirect_uri || `${process.env.NEXTAUTH_URL}/api/oauth/callback/discord`
-      }), {
+        code: code,
+        redirect_uri: options.redirect_uri
+      };
+
+      const response = await axios.post(this.tokenUrl, querystring.stringify(data), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -37,15 +43,15 @@ class DiscordProvider {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Discord token exchange failed: ${error.response?.data?.error_description || error.message}`);
+      throw new Error(`Discord token exchange failed: ${error.message}`);
     }
   }
 
   async getUserProfile(accessToken) {
     try {
-      const response = await axios.get(this.userInfoUrl, {
+      const response = await axios.get(this.profileUrl, {
         headers: {
-          Authorization: `Bearer ${accessToken}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
 
@@ -60,8 +66,8 @@ class DiscordProvider {
           `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : 
           null,
         verified: profile.verified,
-        mfaEnabled: profile.mfa_enabled,
-        provider: 'discord'
+        provider: 'discord',
+        raw: profile
       };
     } catch (error) {
       throw new Error(`Discord profile fetch failed: ${error.message}`);
@@ -70,12 +76,14 @@ class DiscordProvider {
 
   async refreshToken(refreshToken) {
     try {
-      const response = await axios.post(this.tokenUrl, querystring.stringify({
-        client_id: this.config.clientId,
-        client_secret: this.config.clientSecret,
+      const data = {
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
         grant_type: 'refresh_token',
         refresh_token: refreshToken
-      }), {
+      };
+
+      const response = await axios.post(this.tokenUrl, querystring.stringify(data), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -83,16 +91,38 @@ class DiscordProvider {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Discord token refresh failed: ${error.response?.data?.error_description || error.message}`);
+      throw new Error(`Discord token refresh failed: ${error.message}`);
+    }
+  }
+
+  async revokeToken(token) {
+    try {
+      const data = {
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        token: token
+      };
+
+      await axios.post('https://discord.com/api/oauth2/token/revoke', querystring.stringify(data), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Discord token revocation failed:', error.message);
+      return false;
     }
   }
 
   getConfig() {
     return {
       name: 'Discord',
-      slug: 'discord',
-      scopes: ['identify', 'email'],
-      supportsRefresh: true
+      clientId: this.clientId,
+      scopes: this.scopes,
+      authUrl: this.authUrl,
+      tokenUrl: this.tokenUrl,
+      profileUrl: this.profileUrl
     };
   }
 }

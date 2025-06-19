@@ -3,46 +3,52 @@ const querystring = require('querystring');
 
 class FacebookProvider {
   constructor(config) {
-    this.config = config;
+    this.appId = config.appId;
+    this.appSecret = config.appSecret;
     this.authUrl = 'https://www.facebook.com/v18.0/dialog/oauth';
     this.tokenUrl = 'https://graph.facebook.com/v18.0/oauth/access_token';
-    this.userInfoUrl = 'https://graph.facebook.com/v18.0/me';
+    this.profileUrl = 'https://graph.facebook.com/v18.0/me';
+    this.scopes = ['email', 'public_profile'];
   }
 
   getAuthorizationUrl(options = {}) {
     const params = {
-      client_id: this.config.appId,
-      redirect_uri: options.redirect_uri || `${process.env.NEXTAUTH_URL}/api/oauth/callback/facebook`,
-      scope: 'email,public_profile',
+      client_id: this.appId,
       response_type: 'code',
+      scope: options.scope || this.scopes.join(','),
+      redirect_uri: options.redirect_uri,
       state: options.state
     };
 
-    return `${this.authUrl}?${querystring.stringify(params)}`;
+    const queryStr = querystring.stringify(params);
+    return `${this.authUrl}?${queryStr}`;
   }
 
   async exchangeCodeForToken(code, options = {}) {
     try {
+      const params = {
+        client_id: this.appId,
+        client_secret: this.appSecret,
+        code: code,
+        redirect_uri: options.redirect_uri
+      };
+
       const response = await axios.get(this.tokenUrl, {
-        params: {
-          client_id: this.config.appId,
-          client_secret: this.config.appSecret,
-          redirect_uri: options.redirect_uri || `${process.env.NEXTAUTH_URL}/api/oauth/callback/facebook`,
-          code
-        }
+        params: params
       });
 
       return response.data;
     } catch (error) {
-      throw new Error(`Facebook token exchange failed: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(`Facebook token exchange failed: ${error.message}`);
     }
   }
 
   async getUserProfile(accessToken) {
     try {
-      const response = await axios.get(this.userInfoUrl, {
+      const fields = 'id,name,email,first_name,last_name,picture.type(large)';
+      const response = await axios.get(this.profileUrl, {
         params: {
-          fields: 'id,name,email,first_name,last_name,picture.type(large)',
+          fields: fields,
           access_token: accessToken
         }
       });
@@ -55,36 +61,56 @@ class FacebookProvider {
         firstName: profile.first_name,
         lastName: profile.last_name,
         avatar: profile.picture?.data?.url,
-        provider: 'facebook'
+        provider: 'facebook',
+        raw: profile
       };
     } catch (error) {
       throw new Error(`Facebook profile fetch failed: ${error.message}`);
     }
   }
 
-  async getLongLivedToken(shortLivedToken) {
+  async refreshToken(refreshToken) {
+    // Facebook access tokens are long-lived but can be extended
     try {
+      const params = {
+        grant_type: 'fb_exchange_token',
+        client_id: this.appId,
+        client_secret: this.appSecret,
+        fb_exchange_token: refreshToken
+      };
+
       const response = await axios.get(this.tokenUrl, {
-        params: {
-          grant_type: 'fb_exchange_token',
-          client_id: this.config.appId,
-          client_secret: this.config.appSecret,
-          fb_exchange_token: shortLivedToken
-        }
+        params: params
       });
 
       return response.data;
     } catch (error) {
-      throw new Error(`Facebook long-lived token exchange failed: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(`Facebook token refresh failed: ${error.message}`);
+    }
+  }
+
+  async revokeToken(token) {
+    try {
+      await axios.delete(`https://graph.facebook.com/v18.0/me/permissions`, {
+        params: {
+          access_token: token
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Facebook token revocation failed:', error.message);
+      return false;
     }
   }
 
   getConfig() {
     return {
       name: 'Facebook',
-      slug: 'facebook',
-      scopes: ['email', 'public_profile'],
-      supportsRefresh: false
+      clientId: this.appId,
+      scopes: this.scopes,
+      authUrl: this.authUrl,
+      tokenUrl: this.tokenUrl,
+      profileUrl: this.profileUrl
     };
   }
 }
