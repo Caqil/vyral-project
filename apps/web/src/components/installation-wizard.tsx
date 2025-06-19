@@ -546,7 +546,7 @@ const InstallationWizard = () => {
         <CardDescription>Your Vyral CMS is ready!</CardDescription>
       </CardHeader>
       <CardContent className="text-center">
-        <Alert variant="success" className="mb-6">
+        <Alert variant="default" className="mb-6">
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>Successfully installed Vyral CMS.</AlertDescription>
         </Alert>
