@@ -11,6 +11,8 @@ import {
   Plus,
   Search,
   Filter,
+  RefreshCw,
+  Scan,
 } from "lucide-react";
 import {
   Button,
@@ -60,6 +62,7 @@ export default function ModulesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const categories = [
     { value: "all", label: "All Categories" },
     { value: "social", label: "Social Networking" },
@@ -102,6 +105,28 @@ export default function ModulesPage() {
       toast.error("Failed to fetch modules");
     } finally {
       setLoading(false);
+    }
+  };
+  const handleScan = async () => {
+    setScanning(true);
+    try {
+      const response = await fetch("/api/admin/modules/scan", {
+        method: "POST",
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success(
+          `Scanned ${result.scanned} folders, registered ${result.registered} new modules`
+        );
+        fetchModules(); // Refresh the modules list
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("Scan failed");
+    } finally {
+      setScanning(false);
     }
   };
 
@@ -178,9 +203,13 @@ export default function ModulesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Browse Store
+          <Button onClick={handleScan} disabled={scanning} variant="outline">
+            {scanning ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Scan className="h-4 w-4 mr-2" />
+            )}
+            Scan Directory
           </Button>
           <Button onClick={() => setUploadDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

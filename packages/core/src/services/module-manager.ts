@@ -95,7 +95,72 @@ export class ModuleManager extends BaseService<ModuleDocument> {
     
     return module;
   }
+async scanModulesDirectory(): Promise<{ scanned: number; registered: number; errors: string[] }> {
+  const errors: string[] = [];
+  let scanned = 0;
+  let registered = 0;
 
+  try {
+    const modulesPath = process.env.MODULES_PATH || path.join(process.cwd(), 'modules');
+    
+    // Check if modules directory exists
+    if (!fs.existsSync(modulesPath)) {
+      await fs.promises.mkdir(modulesPath, { recursive: true });
+      return { scanned: 0, registered: 0, errors: ['Modules directory created'] };
+    }
+
+    // Read all directories in modules folder
+    const entries = await fs.promises.readdir(modulesPath, { withFileTypes: true });
+    const moduleDirs = entries.filter(entry => entry.isDirectory()).map(entry => entry.name);
+
+    this.logger.info(`🔍 Scanning ${moduleDirs.length} directories...`);
+
+    for (const dirName of moduleDirs) {
+      scanned++;
+      const modulePath = path.join(modulesPath, dirName);
+      const manifestPath = path.join(modulePath, 'manifest.json');
+
+      try {
+        // Check if manifest.json exists
+        if (!fs.existsSync(manifestPath)) {
+          errors.push(`${dirName}: No manifest.json found`);
+          continue;
+        }
+
+        // Read and parse manifest
+        const manifestContent = await fs.promises.readFile(manifestPath, 'utf-8');
+        const manifest = JSON.parse(manifestContent) as ModuleManifest;
+
+        // Check if module already exists in database
+        const existingModule = await ModuleModel.findOne({ 'manifest.slug': manifest.slug });
+        if (existingModule) {
+          continue; // Skip already registered modules
+        }
+
+        // Register new module
+        await this.create({
+          manifest,
+          status: 'installed',
+          installPath: modulePath,
+          configValues: manifest.defaultConfig || {},
+          installedBy: 'system',
+          installedAt: new Date(),
+          errorCount: 0
+        } as Partial<Module>);
+
+        registered++;
+        this.logger.info(`✅ Registered: ${manifest.slug}`);
+
+      } catch (error: any) {
+        errors.push(`${dirName}: ${error.message}`);
+      }
+    }
+
+    return { scanned, registered, errors };
+  } catch (error: any) {
+    throw error;
+  }
+}
 private async loadModuleClass(module: ModuleDocument): Promise<any> {
     try {
       // Construct the full path to the module file
