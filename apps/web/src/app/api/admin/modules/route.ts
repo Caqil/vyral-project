@@ -54,7 +54,7 @@ const modules = await moduleManager.findOne(filters, {
     console.log('🔐 Checking permissions for user:', session.user.id);
     
     try {
-      await requirePermission(session.user.id, 'plugins.manage');
+      await requirePermission(session.user.id, 'modules.manage');
       console.log('✅ Permission check passed');
     } catch (permError) {
       if (permError instanceof PermissionError) {
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await requirePermission(session.user.id, 'plugins.manage');
+    await requirePermission(session.user.id, 'modules.manage');
 
     const formData = await request.formData();
     const file = formData.get('module') as File;

@@ -1,6 +1,7 @@
 // apps/web/src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 // Static assets and API routes that should always be accessible
 const ALWAYS_ACCESSIBLE = [
@@ -10,10 +11,11 @@ const ALWAYS_ACCESSIBLE = [
   '/icons',
   '/api/health',
   '/api/status',
-  '/api/auto-seed'
+  '/api/auto-seed',
+  '/api/auth', // NextAuth API routes
 ];
 
-// Admin routes that need special protection
+// Admin routes that need authentication
 const ADMIN_ROUTES = [
   '/admin',
   '/api/admin'
@@ -24,7 +26,17 @@ const DEV_ROUTES = [
   '/api/dev'
 ];
 
-export function middleware(request: NextRequest) {
+// Public routes (no auth required)
+const PUBLIC_ROUTES = [
+  '/',
+  '/auth',
+  '/blog',
+  '/post',
+  '/about',
+  '/contact'
+];
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Always allow static assets and basic API routes
@@ -38,13 +50,76 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Handle admin routes with enhanced security
+  // Handle admin routes with authentication
   if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
-    return handleAdminAccess(request);
+    return await handleAdminAccess(request);
   }
 
   // Handle all other routes normally
   return handleNormalFlow(request);
+}
+
+async function handleAdminAccess(request: NextRequest) {
+  try {
+    // Check for valid session token
+    const token = await getToken({ 
+      req: request, 
+      secret: process.env.NEXTAUTH_SECRET 
+    });
+
+    // If no token, redirect to signin
+    if (!token) {
+      console.log('🔒 No token found, redirecting to signin');
+      const signInUrl = new URL('/auth/signin', request.url);
+      signInUrl.searchParams.set('callbackUrl', request.url);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    // Check if user has admin role
+    const allowedRoles = ['super_admin', 'admin', 'editor'];
+    if (!token.role || !allowedRoles.includes(token.role as string)) {
+      console.log(`🚫 User role '${token.role}' not allowed for admin access`);
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    console.log(`✅ Admin access granted for user: ${token.email} (${token.role})`);
+
+    // Enhanced security headers for admin routes
+    const response = NextResponse.next();
+    
+    // Add strict security headers for admin
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    
+    // Add Content Security Policy for admin pages
+    response.headers.set('Content-Security-Policy', getAdminCSP());
+    
+    // Check for suspicious headers or parameters
+    if (!verifyRequestIntegrity(request)) {
+      console.warn('⚠️ Suspicious admin access attempt blocked');
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    
+    // Check rate limiting for admin routes
+    if (!checkAdminRateLimit(request)) {
+      console.warn('⚠️ Admin rate limit exceeded');
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429 }
+      );
+    }
+    
+    return response;
+
+  } catch (error) {
+    console.error('❌ Error in admin middleware:', error);
+    const signInUrl = new URL('/auth/signin', request.url);
+    signInUrl.searchParams.set('callbackUrl', request.url);
+    return NextResponse.redirect(signInUrl);
+  }
 }
 
 function handleNormalFlow(request: NextRequest) {
@@ -59,38 +134,6 @@ function handleNormalFlow(request: NextRequest) {
   return response;
 }
 
-function handleAdminAccess(request: NextRequest) {
-  // Enhanced security headers for admin routes
-  const response = NextResponse.next();
-  
-  // Add strict security headers for admin
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  
-  // Add Content Security Policy for admin pages
-  response.headers.set('Content-Security-Policy', getAdminCSP());
-  
-  // Check for suspicious headers or parameters
-  if (!verifyRequestIntegrity(request)) {
-    console.warn('Suspicious admin access attempt blocked');
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-  
-  // Check rate limiting for admin routes
-  if (!checkAdminRateLimit(request)) {
-    console.warn('Admin rate limit exceeded');
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      { status: 429 }
-    );
-  }
-  
-  return response;
-}
-
 // Anti-tampering checks
 function verifyRequestIntegrity(request: NextRequest): boolean {
   try {
@@ -98,12 +141,14 @@ function verifyRequestIntegrity(request: NextRequest): boolean {
     const suspiciousHeaders = [
       'x-vyral-bypass',
       'x-admin-override',
-      'x-force-access'
+      'x-force-access',
+      'x-bypass-auth',
+      'x-skip-check'
     ];
 
     for (const header of suspiciousHeaders) {
       if (request.headers.get(header)) {
-        console.warn(`Suspicious header detected: ${header}`);
+        console.warn(`⚠️ Suspicious header detected: ${header}`);
         return false;
       }
     }
@@ -113,12 +158,13 @@ function verifyRequestIntegrity(request: NextRequest): boolean {
       'bypass_auth',
       'force_access',
       'override_check',
-      'admin_bypass'
+      'admin_bypass',
+      'skip_auth'
     ];
 
     for (const param of suspiciousParams) {
       if (request.nextUrl.searchParams.has(param)) {
-        console.warn(`Suspicious parameter detected: ${param}`);
+        console.warn(`⚠️ Suspicious parameter detected: ${param}`);
         return false;
       }
     }

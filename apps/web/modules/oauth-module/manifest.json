@@ -67,35 +67,35 @@
       "method": "GET",
       "path": "/api/oauth/providers",
       "handler": "getProviders",
-      "permissions": ["oauth.authenticate"],
+      "permissions": [],
       "description": "Get available OAuth providers"
     },
     {
       "method": "GET",
       "path": "/api/oauth/auth/:provider",
       "handler": "initiateAuth",
-      "permissions": ["oauth.authenticate"],
+      "permissions": [],
       "description": "Initiate OAuth authentication"
     },
     {
       "method": "GET",
       "path": "/api/oauth/callback/:provider",
       "handler": "handleCallback",
-      "permissions": ["oauth.authenticate"],
+      "permissions": [],
       "description": "Handle OAuth callback"
     },
     {
       "method": "POST",
       "path": "/api/oauth/refresh",
       "handler": "refreshToken",
-      "permissions": ["oauth.authenticate"],
+      "permissions": [],
       "description": "Refresh OAuth token"
     },
     {
       "method": "DELETE",
       "path": "/api/oauth/disconnect/:provider",
       "handler": "disconnectProvider",
-      "permissions": ["oauth.authenticate"],
+      "permissions": [],
       "description": "Disconnect OAuth provider"
     },
     {

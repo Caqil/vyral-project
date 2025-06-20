@@ -176,8 +176,6 @@ uploads/
 
 # Media files (if stored locally)
 public/media/
-media/
-
 # Backup files
 *.bak
 *.backup

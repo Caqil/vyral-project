@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await requirePermission(session.user.id, 'plugins.manage');
+    await requirePermission(session.user.id, 'modules.manage');
     await connectDB();
     
     const moduleManager = new ModuleManager();

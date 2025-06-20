@@ -20,7 +20,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await requirePermission(session.user.id, 'plugins.manage');
+    await requirePermission(session.user.id, 'modules.manage');
 
     const module = await moduleManager.findByIdOrThrow(resolvedParams.id);
     return NextResponse.json({ module });
@@ -46,7 +46,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await requirePermission(session.user.id, 'plugins.manage');
+    await requirePermission(session.user.id, 'modules.manage');
 
     const { config } = await request.json();
     const module = await moduleManager.updateModuleConfig(resolvedParams.id, config, session.user.id);
@@ -77,7 +77,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await requirePermission(session.user.id, 'plugins.manage');
+    await requirePermission(session.user.id, 'modules.manage');
 
     await moduleManager.uninstallModule(resolvedParams.id, session.user.id);
 
