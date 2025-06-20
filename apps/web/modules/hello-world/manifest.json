@@ -27,9 +27,6 @@
       "required": false
     }
   ],
-  "permissions": [
-    "hello.read"
-  ],
   "apiRoutes": [
     {
       "method": "GET",
