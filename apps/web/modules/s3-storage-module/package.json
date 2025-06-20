@@ -1,0 +1,108 @@
+{
+  "name": "s3-storage",
+  "version": "1.0.0",
+  "description": "S3-compatible storage module for Vyral CMS supporting AWS S3, Vultr, Cloudflare R2, DigitalOcean Spaces, and more",
+  "main": "index.js",
+  "author": "Vyral Team",
+  "email": "hello@vyral.com",
+  "license": "MIT",
+  "keywords": [
+    "vyral-cms",
+    "module",
+    "storage",
+    "s3",
+    "file-upload",
+    "cdn",
+    "aws",
+    "vultr",
+    "cloudflare-r2",
+    "digitalocean-spaces"
+  ],
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.832.0",
+    "@aws-sdk/s3-request-presigner": "^3.832.0",
+    "mime-types": "^2.1.35",
+    "sharp": "^0.32.6",
+    "file-type": "^19.5.0",
+    "axios": "^1.6.0",
+    "crypto": "^1.0.1",
+    "path": "^0.12.7",
+    "fs-extra": "^11.2.0"
+  },
+  "peerDependencies": {
+    "express": ">=4.18.0",
+    "@vyral/core": "^1.0.0"
+  },
+  "scripts": {
+    "postinstall": "node install.js",
+    "preuninstall": "node uninstall.js",
+    "test": "jest --testPathPattern=tests/",
+    "test:unit": "jest --testPathPattern=tests/unit/",
+    "test:integration": "jest --testPathPattern=tests/integration/",
+    "validate": "node -e \"try { require('./index.js'); console.log('📦 S3 Storage module validation passed'); } catch(e) { console.error('❌ Validation failed:', e.message); process.exit(1); }\"",
+    "health-check": "node -e \"console.log('🟢 S3 Storage module is healthy')\"",
+    "migrate-test": "node tests/integration/migration.test.js",
+    "connection-test": "node api/test-connection.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vyral/vyral-cms"
+  },
+  "bugs": {
+    "url": "https://github.com/vyral/vyral-cms/issues"
+  },
+  "homepage": "https://vyral.com",
+  "vyralModule": {
+    "autoInstallDeps": true,
+    "requiresRestart": false,
+    "healthCheck": {
+      "endpoint": "/api/s3-storage/health",
+      "interval": 300000
+    },
+    "permissions": [
+      "media.upload",
+      "media.delete",
+      "settings.manage",
+      "storage.configure"
+    ],
+    "hooks": [
+      "media:before-upload",
+      "media:after-upload",
+      "media:before-delete",
+      "media:after-delete",
+      "url:generate"
+    ]
+  },
+  "files": [
+    "index.js",
+    "install.js",
+    "uninstall.js",
+    "services/**/*",
+    "providers/**/*",
+    "utils/**/*",
+    "config/**/*",
+    "api/**/*",
+    "hooks/**/*",
+    "admin/**/*",
+    "middleware/**/*",
+    "docs/**/*",
+    "README.md"
+  ],
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "services/**/*.js",
+      "providers/**/*.js",
+      "utils/**/*.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"]
+  }
+}

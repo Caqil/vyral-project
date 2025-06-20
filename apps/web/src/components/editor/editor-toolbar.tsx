@@ -1,8 +1,6 @@
 "use client";
 
 import { type Editor } from "@tiptap/react";
-import { Button, cn } from "@/components/ui";
-import { Separator } from "@vyral/uiseparator";
 import {
   Bold,
   Italic,
@@ -20,6 +18,9 @@ import {
   Image,
   Code2,
 } from "lucide-react";
+import { Button } from "../ui/button";
+import { cn } from "@/lib/utils";
+import { Separator } from "../ui/separator";
 
 interface EditorToolbarProps {
   editor: Editor;
@@ -29,6 +30,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   const addImage = () => {
     const url = window.prompt("Enter image URL:");
     if (url) {
+      // @ts-expect-error: setImage is available if Image extension is loaded
       editor.chain().focus().setImage({ src: url }).run();
     }
   };

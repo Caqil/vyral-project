@@ -1,0 +1,332 @@
+{
+  "aws-s3": {
+    "name": "Amazon S3",
+    "description": "Amazon Simple Storage Service - Industry standard object storage",
+    "website": "https://aws.amazon.com/s3/",
+    "documentation": "https://docs.aws.amazon.com/s3/",
+    "logo": "/modules/s3-storage/assets/logos/aws-s3.png",
+    "endpoint": "s3.amazonaws.com",
+    "supportsAcceleration": true,
+    "supportsVersioning": true,
+    "supportsCors": true,
+    "supportsLifecycle": true,
+    "supportsEncryption": true,
+    "supportsTags": true,
+    "maxFileSize": "5TB",
+    "regions": [
+      {
+        "id": "us-east-1",
+        "name": "US East (N. Virginia)",
+        "endpoint": "s3.amazonaws.com"
+      },
+      {
+        "id": "us-east-2", 
+        "name": "US East (Ohio)",
+        "endpoint": "s3.us-east-2.amazonaws.com"
+      },
+      {
+        "id": "us-west-1",
+        "name": "US West (N. California)",
+        "endpoint": "s3.us-west-1.amazonaws.com"
+      },
+      {
+        "id": "us-west-2",
+        "name": "US West (Oregon)",
+        "endpoint": "s3.us-west-2.amazonaws.com"
+      },
+      {
+        "id": "eu-west-1",
+        "name": "Europe (Ireland)",
+        "endpoint": "s3.eu-west-1.amazonaws.com"
+      },
+      {
+        "id": "eu-west-2",
+        "name": "Europe (London)",
+        "endpoint": "s3.eu-west-2.amazonaws.com"
+      },
+      {
+        "id": "eu-central-1",
+        "name": "Europe (Frankfurt)",
+        "endpoint": "s3.eu-central-1.amazonaws.com"
+      },
+      {
+        "id": "ap-southeast-1",
+        "name": "Asia Pacific (Singapore)",
+        "endpoint": "s3.ap-southeast-1.amazonaws.com"
+      },
+      {
+        "id": "ap-southeast-2",
+        "name": "Asia Pacific (Sydney)",
+        "endpoint": "s3.ap-southeast-2.amazonaws.com"
+      },
+      {
+        "id": "ap-northeast-1",
+        "name": "Asia Pacific (Tokyo)",
+        "endpoint": "s3.ap-northeast-1.amazonaws.com"
+      }
+    ],
+    "pricing": {
+      "storage": "$0.023/GB/month",
+      "requests": "$0.0004 per 1000 PUT",
+      "transfer": "$0.09/GB",
+      "notes": "Pricing varies by region and storage class"
+    },
+    "features": [
+      "S3 Transfer Acceleration",
+      "Object versioning",
+      "Cross-region replication",
+      "Lifecycle management",
+      "Server-side encryption",
+      "CloudFront integration"
+    ],
+    "setupTime": "15-30 minutes",
+    "complexity": "medium"
+  },
+  "cloudflare-r2": {
+    "name": "Cloudflare R2",
+    "description": "Zero egress object storage with global performance",
+    "website": "https://cloudflare.com/products/r2/",
+    "documentation": "https://developers.cloudflare.com/r2/",
+    "logo": "/modules/s3-storage/assets/logos/cloudflare-r2.png",
+    "endpoint": "cloudflare-r2",
+    "supportsAcceleration": false,
+    "supportsVersioning": false,
+    "supportsCors": true,
+    "supportsLifecycle": false,
+    "supportsEncryption": true,
+    "supportsTags": false,
+    "maxFileSize": "5TB",
+    "regions": [
+      {
+        "id": "auto",
+        "name": "Automatic (Global)",
+        "endpoint": "Auto-selected based on account"
+      }
+    ],
+    "pricing": {
+      "storage": "$0.015/GB/month",
+      "requests": "$0.36 per million",
+      "transfer": "Free egress",
+      "notes": "No egress fees - major cost advantage"
+    },
+    "features": [
+      "Zero egress fees",
+      "Global edge network",
+      "S3-compatible API",
+      "Custom domain support",
+      "Cloudflare Workers integration",
+      "R2.dev subdomain"
+    ],
+    "setupTime": "10-20 minutes",
+    "complexity": "low",
+    "advantages": [
+      "Significant cost savings on bandwidth",
+      "Global CDN included",
+      "No complex region selection"
+    ]
+  },
+  "vultr-storage": {
+    "name": "Vultr Object Storage",
+    "description": "High-performance object storage with integrated CDN",
+    "website": "https://www.vultr.com/products/object-storage/",
+    "documentation": "https://www.vultr.com/docs/vultr-object-storage",
+    "logo": "/modules/s3-storage/assets/logos/vultr.png",
+    "endpoint": "vultrobjects.com",
+    "supportsAcceleration": false,
+    "supportsVersioning": false,
+    "supportsCors": true,
+    "supportsLifecycle": false,
+    "supportsEncryption": false,
+    "supportsTags": false,
+    "maxFileSize": "1TB",
+    "regions": [
+      {
+        "id": "ewr1",
+        "name": "New Jersey",
+        "endpoint": "ewr1.vultrobjects.com",
+        "location": "East Coast US"
+      },
+      {
+        "id": "sjc1",
+        "name": "Silicon Valley",
+        "endpoint": "sjc1.vultrobjects.com", 
+        "location": "West Coast US"
+      },
+      {
+        "id": "ams1",
+        "name": "Amsterdam",
+        "endpoint": "ams1.vultrobjects.com",
+        "location": "Europe"
+      }
+    ],
+    "pricing": {
+      "storage": "$0.02/GB/month",
+      "requests": "Included",
+      "transfer": "1TB free, then $0.01/GB",
+      "notes": "Simple, predictable pricing"
+    },
+    "features": [
+      "Integrated CDN",
+      "S3-compatible API",
+      "High-performance SSD storage",
+      "DDoS protection",
+      "Simple pricing"
+    ],
+    "setupTime": "5-15 minutes",
+    "complexity": "low"
+  },
+  "digitalocean-spaces": {
+    "name": "DigitalOcean Spaces",
+    "description": "Simple, scalable object storage with built-in CDN",
+    "website": "https://www.digitalocean.com/products/spaces",
+    "documentation": "https://docs.digitalocean.com/products/spaces/",
+    "logo": "/modules/s3-storage/assets/logos/digitalocean.png",
+    "endpoint": "digitaloceanspaces.com",
+    "supportsAcceleration": false,
+    "supportsVersioning": false,
+    "supportsCors": true,
+    "supportsLifecycle": false,
+    "supportsEncryption": false,
+    "supportsTags": false,
+    "maxFileSize": "5GB",
+    "regions": [
+      {
+        "id": "nyc3",
+        "name": "New York 3",
+        "endpoint": "nyc3.digitaloceanspaces.com",
+        "cdnEndpoint": "nyc3.cdn.digitaloceanspaces.com"
+      },
+      {
+        "id": "ams3", 
+        "name": "Amsterdam 3",
+        "endpoint": "ams3.digitaloceanspaces.com",
+        "cdnEndpoint": "ams3.cdn.digitaloceanspaces.com"
+      },
+      {
+        "id": "sgp1",
+        "name": "Singapore 1", 
+        "endpoint": "sgp1.digitaloceanspaces.com",
+        "cdnEndpoint": "sgp1.cdn.digitaloceanspaces.com"
+      },
+      {
+        "id": "fra1",
+        "name": "Frankfurt 1",
+        "endpoint": "fra1.digitaloceanspaces.com", 
+        "cdnEndpoint": "fra1.cdn.digitaloceanspaces.com"
+      },
+      {
+        "id": "lon1",
+        "name": "London 1",
+        "endpoint": "lon1.digitaloceanspaces.com",
+        "cdnEndpoint": "lon1.cdn.digitaloceanspaces.com"
+      }
+    ],
+    "pricing": {
+      "storage": "$5/month for 250GB",
+      "additional": "$0.02/GB over 250GB",
+      "transfer": "1TB CDN bandwidth included",
+      "notes": "Predictable pricing with included allowances"
+    },
+    "features": [
+      "Built-in CDN",
+      "S3-compatible API", 
+      "Static website hosting",
+      "CORS support",
+      "DigitalOcean integration"
+    ],
+    "setupTime": "10-20 minutes",
+    "complexity": "low"
+  },
+  "linode-storage": {
+    "name": "Linode Object Storage",
+    "description": "Simple object storage with competitive pricing",
+    "website": "https://www.linode.com/products/object-storage/",
+    "documentation": "https://www.linode.com/docs/products/storage/object-storage/",
+    "logo": "/modules/s3-storage/assets/logos/linode.png",
+    "endpoint": "linodeobjects.com",
+    "supportsAcceleration": false,
+    "supportsVersioning": false,
+    "supportsCors": true,
+    "supportsLifecycle": false,
+    "supportsEncryption": false,
+    "supportsTags": false,
+    "maxFileSize": "5GB",
+    "regions": [
+      {
+        "id": "us-east-1",
+        "name": "Newark, NJ",
+        "endpoint": "us-east-1.linodeobjects.com"
+      },
+      {
+        "id": "eu-central-1",
+        "name": "Frankfurt, DE", 
+        "endpoint": "eu-central-1.linodeobjects.com"
+      },
+      {
+        "id": "ap-south-1",
+        "name": "Singapore, SG",
+        "endpoint": "ap-south-1.linodeobjects.com"
+      },
+      {
+        "id": "us-southeast-1",
+        "name": "Atlanta, GA",
+        "endpoint": "us-southeast-1.linodeobjects.com"
+      }
+    ],
+    "pricing": {
+      "storage": "$0.02/GB/month",
+      "requests": "Included",
+      "transfer": "1TB included with Linode services",
+      "notes": "Simple pricing, transfer included"
+    },
+    "features": [
+      "S3-compatible API",
+      "Simple pricing",
+      "Global presence",
+      "Linode ecosystem integration",
+      "Excellent support"
+    ],
+    "setupTime": "5-15 minutes",
+    "complexity": "low"
+  },
+  "custom-s3": {
+    "name": "Custom S3-Compatible",
+    "description": "Any S3-compatible storage service",
+    "website": "",
+    "documentation": "",
+    "logo": "/modules/s3-storage/assets/logos/custom.png",
+    "endpoint": "custom",
+    "supportsAcceleration": false,
+    "supportsVersioning": false,
+    "supportsCors": true,
+    "supportsLifecycle": false,
+    "supportsEncryption": false,
+    "supportsTags": false,
+    "maxFileSize": "Varies",
+    "regions": [
+      {
+        "id": "custom",
+        "name": "Custom Region",
+        "endpoint": "Custom endpoint"
+      }
+    ],
+    "pricing": {
+      "storage": "Varies by provider",
+      "requests": "Varies by provider", 
+      "transfer": "Varies by provider",
+      "notes": "Check with your provider for pricing details"
+    },
+    "features": [
+      "S3-compatible API",
+      "Custom endpoint support",
+      "Flexible configuration"
+    ],
+    "setupTime": "10-30 minutes",
+    "complexity": "medium",
+    "requirements": [
+      "Custom endpoint URL",
+      "S3-compatible API",
+      "Access credentials"
+    ]
+  }
+}

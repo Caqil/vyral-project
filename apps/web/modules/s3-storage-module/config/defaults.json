@@ -1,0 +1,149 @@
+{
+  "fileSize": {
+    "maxFileSize": 104857600,
+    "maxImageSize": 52428800,
+    "maxVideoSize": 524288000,
+    "maxDocumentSize": 104857600
+  },
+  "allowedExtensions": {
+    "images": ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "tiff", "ico"],
+    "videos": ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv", "m4v", "3gp"],
+    "audio": ["mp3", "wav", "ogg", "aac", "flac", "m4a", "wma"],
+    "documents": ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "odt", "ods", "odp"],
+    "archives": ["zip", "rar", "7z", "tar", "gz", "bz2"],
+    "code": ["js", "css", "html", "json", "xml", "yml", "yaml"],
+    "fonts": ["woff", "woff2", "ttf", "otf", "eot"]
+  },
+  "blockedExtensions": [
+    "exe", "bat", "cmd", "com", "pif", "scr", "vbs", "js", "jar",
+    "app", "deb", "pkg", "rpm", "dmg", "sh", "run", "msi", "ps1",
+    "php", "jsp", "asp", "aspx", "py", "rb", "pl", "cgi"
+  ],
+  "imageOptimization": {
+    "defaultQuality": 85,
+    "maxWidth": 2048,
+    "maxHeight": 2048,
+    "progressive": true,
+    "stripMetadata": true,
+    "formats": {
+      "jpeg": {
+        "quality": 85,
+        "progressive": true,
+        "mozjpeg": true
+      },
+      "png": {
+        "quality": 85,
+        "progressive": true,
+        "compressionLevel": 8,
+        "adaptiveFiltering": true
+      },
+      "webp": {
+        "quality": 85,
+        "effort": 6
+      },
+      "avif": {
+        "quality": 80,
+        "effort": 4
+      }
+    }
+  },
+  "thumbnails": {
+    "enabled": true,
+    "sizes": [
+      { "name": "thumbnail", "width": 150, "height": 150, "crop": "cover" },
+      { "name": "small", "width": 300, "height": 300, "crop": "inside" },
+      { "name": "medium", "width": 600, "height": 400, "crop": "inside" },
+      { "name": "large", "width": 1200, "height": 800, "crop": "inside" }
+    ],
+    "formats": ["webp", "jpg"],
+    "quality": 80
+  },
+  "cacheControl": {
+    "images": "public, max-age=31536000, immutable",
+    "videos": "public, max-age=604800",
+    "audio": "public, max-age=259200",
+    "documents": "public, max-age=86400",
+    "archives": "public, max-age=86400",
+    "fonts": "public, max-age=31536000",
+    "css": "public, max-age=2592000",
+    "js": "public, max-age=2592000",
+    "default": "public, max-age=3600"
+  },
+  "folderPatterns": {
+    "date-based": "{year}/{month}/",
+    "type-based": "{type}/",
+    "user-based": "users/{userId}/",
+    "hybrid": "{year}/{month}/{type}/",
+    "custom": "{year}/{month}/{type}/{userId}/"
+  },
+  "security": {
+    "scanFiles": true,
+    "maxVirusCheckSize": 52428800,
+    "quarantineFolder": "quarantine/",
+    "allowSymlinks": false,
+    "checkMimeType": true,
+    "validateExtension": true
+  },
+  "performance": {
+    "multipartThreshold": 5242880,
+    "chunkSize": 5242880,
+    "maxConcurrentUploads": 3,
+    "retryAttempts": 3,
+    "retryDelay": 1000,
+    "timeout": 30000
+  },
+  "backup": {
+    "enabled": false,
+    "retentionDays": 30,
+    "compressionLevel": 6,
+    "encryptBackups": false
+  },
+  "cdn": {
+    "enabled": false,
+    "cacheTtl": 86400,
+    "gzipCompression": true,
+    "brotliCompression": true
+  },
+  "analytics": {
+    "trackUploads": true,
+    "trackDownloads": true,
+    "trackDeletes": true,
+    "retentionDays": 365,
+    "exportFormats": ["json", "csv"]
+  },
+  "notifications": {
+    "uploadSuccess": false,
+    "uploadFailure": true,
+    "quotaWarning": true,
+    "quotaThreshold": 0.9
+  },
+  "metadata": {
+    "extractExif": true,
+    "extractIptc": false,
+    "extractXmp": false,
+    "preserveColorProfile": true,
+    "preserveOrientation": true
+  },
+  "watermark": {
+    "enabled": false,
+    "position": "bottom-right",
+    "opacity": 0.7,
+    "margin": 10,
+    "text": "© Vyral CMS",
+    "font": "Arial",
+    "fontSize": 12,
+    "color": "#ffffff"
+  },
+  "limits": {
+    "dailyUploads": 1000,
+    "monthlyStorage": 107374182400,
+    "filesPerUser": 10000,
+    "filesPerFolder": 1000
+  },
+  "cleanup": {
+    "tempFilesTtl": 3600,
+    "failedUploadsTtl": 86400,
+    "logRetentionDays": 30,
+    "cacheCleanupInterval": 3600
+  }
+}

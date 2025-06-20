@@ -1,104 +1,89 @@
 import os
-import errno
 
-def create_oauth_module_structure(base_path):
-    """
-    Creates the oauth-module folder structure with all directories and empty files as specified
-    Args:
-        base_path (str): The base directory where oauth-module will be created
-    """
-    # Define the folder structure
-    structure = {
-        'oauth-module': {
-            # Root files
-            'files': [
-                'manifest.json',
-                'package.json',
-                'index.js',
-                'README.md',
-                'icon.png'
-            ],
-            # Subdirectories
-            'migrations': {
-                'files': [
-                    '001_create_oauth_providers.js',
-                    '002_create_oauth_tokens.js',
-                    '003_add_user_oauth_fields.js'
-                ]
-            },
-            'services': {
-                'files': [
-                    'oauth-service.js',
-                    'provider-service.js',
-                    'token-service.js'
-                ]
-            },
-            'providers': {
-                'files': [
-                    'google.js',
-                    'github.js',
-                    'facebook.js',
-                    'twitter.js',
-                    'discord.js',
-                    'linkedin.js'
-                ]
-            },
-            'components': {
-                'files': [
-                    'oauth-button.js',
-                    'oauth-list.js',
-                    'provider-config.js'
-                ]
-            },
-            'utils': {
-                'files': [
-                    'crypto.js',
-                    'validators.js',
-                    'constants.js'
-                ]
-            }
-        }
-    }
+def create_directory(path):
+    os.makedirs(path, exist_ok=True)
 
-    def create_structure(current_path, items):
-        """
-        Recursively creates directories and files
-        Args:
-            current_path (str): Current directory path
-            items (dict): Structure dictionary for current directory
-        """
-        try:
-            # Create current directory
-            os.makedirs(current_path, exist_ok=True)
+def create_file(path):
+    with open(path, 'w') as f:
+        pass
 
-            # Process items
-            for key, value in items.items():
-                if key == 'files':
-                    # Create files
-                    for file_name in value:
-                        file_path = os.path.join(current_path, file_name)
-                        try:
-                            with open(file_path, 'w') as f:
-                                pass  # Create empty file
-                        except IOError as e:
-                            print(f"Error creating file {file_path}: {e}")
-                else:
-                    # Create subdirectory
-                    new_path = os.path.join(current_path, key)
-                    create_structure(new_path, value)
+# Define base path
+base_path = "apps/web/modules/s3-storage-module"
 
-        except OSError as e:
-            print(f"Error creating directory {current_path}: {e}")
+# Create main directory
+create_directory(base_path)
 
-    try:
-        # Start creating structure
-        base_dir = os.path.join(base_path, 'oauth-module')
-        create_structure(base_path, structure)
-        print(f"OAuth module structure created successfully at {base_dir}")
-    except Exception as e:
-        print(f"Failed to create OAuth module structure: {e}")
+# Create main files
+create_file(os.path.join(base_path, "package.json"))
+create_file(os.path.join(base_path, "manifest.json"))
+create_file(os.path.join(base_path, "index.js"))
+create_file(os.path.join(base_path, "install.js"))
+create_file(os.path.join(base_path, "uninstall.js"))
+create_file(os.path.join(base_path, "README.md"))
+create_file(os.path.join(base_path, "icon.png"))
+create_file(os.path.join(base_path, "screenshot1.png"))
+create_file(os.path.join(base_path, "screenshot2.png"))
 
-if __name__ == "__main__":
-    # Use current working directory as base path
-    current_dir = os.getcwd()
-    create_oauth_module_structure(current_dir)
+# Create config directory and files
+config_path = os.path.join(base_path, "config")
+create_directory(config_path)
+create_file(os.path.join(config_path, "providers.json"))
+create_file(os.path.join(config_path, "defaults.json"))
+
+# Create services directory and files
+services_path = os.path.join(base_path, "services")
+create_directory(services_path)
+create_file(os.path.join(services_path, "s3-storage-service.js"))
+create_file(os.path.join(services_path, "provider-factory.js"))
+create_file(os.path.join(services_path, "file-manager.js"))
+create_file(os.path.join(services_path, "url-service.js"))
+
+# Create providers directory and files
+providers_path = os.path.join(base_path, "providers")
+create_directory(providers_path)
+create_file(os.path.join(providers_path, "aws-s3.js"))
+create_file(os.path.join(providers_path, "vultr-storage.js"))
+create_file(os.path.join(providers_path, "cloudflare-r2.js"))
+create_file(os.path.join(providers_path, "digitalocean-spaces.js"))
+create_file(os.path.join(providers_path, "linode-storage.js"))
+create_file(os.path.join(providers_path, "base-provider.js"))
+
+# Create utils directory and files
+utils_path = os.path.join(base_path, "utils")
+create_directory(utils_path)
+create_file(os.path.join(utils_path, "validators.js"))
+create_file(os.path.join(utils_path, "file-utils.js"))
+create_file(os.path.join(utils_path, "mime-helper.js"))
+create_file(os.path.join(utils_path, "error-handler.js"))
+
+# Create middleware directory and files
+middleware_path = os.path.join(base_path, "middleware")
+create_directory(middleware_path)
+create_file(os.path.join(middleware_path, "storage-interceptor.js"))
+create_file(os.path.join(middleware_path, "upload-handler.js"))
+
+# Create admin directory and files
+admin_path = os.path.join(base_path, "admin")
+create_directory(admin_path)
+create_file(os.path.join(admin_path, "settings-panel.js"))
+create_file(os.path.join(admin_path, "storage-stats.js"))
+create_file(os.path.join(admin_path, "migration-tool.js"))
+create_file(os.path.join(admin_path, "test-connection.js"))
+
+# Create api directory and files
+api_path = os.path.join(base_path, "api")
+create_directory(api_path)
+create_file(os.path.join(api_path, "upload.js"))
+create_file(os.path.join(api_path, "delete.js"))
+create_file(os.path.join(api_path, "migrate.js"))
+create_file(os.path.join(api_path, "test-connection.js"))
+create_file(os.path.join(api_path, "settings.js"))
+
+# Create hooks directory and files
+hooks_path = os.path.join(base_path, "hooks")
+create_directory(hooks_path)
+create_file(os.path.join(hooks_path, "media-upload.js"))
+create_file(os.path.join(hooks_path, "media-delete.js"))
+create_file(os.path.join(hooks_path, "url-generation.js"))
+
+print(f"Folder structure and empty files created successfully at {base_path}")

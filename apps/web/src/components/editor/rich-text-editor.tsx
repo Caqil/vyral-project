@@ -2,13 +2,9 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import lowlight from "lowlight";
 import { EditorToolbar } from "./editor-toolbar";
-import { cn } from "../../lib";
 
 interface RichTextEditorProps {
   content?: string;
