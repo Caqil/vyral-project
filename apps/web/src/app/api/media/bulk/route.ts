@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -34,14 +33,11 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'delete':
-        for (const id of ids) {
-          try {
-            await mediaService.deleteMedia(id);
-            results.push({ id, status: 'deleted' });
-          } catch (error) {
-            errors.push(`Failed to delete ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          }
-        }
+        // ✅ ENHANCED: Now uses proper bulk delete with file cleanup
+        const deleteResults = await mediaService.bulkDeleteMedia(ids);
+        
+        results = deleteResults.success.map(id => ({ id, status: 'deleted' }));
+        errors = deleteResults.failed.map(id => `Failed to delete ${id}`);
         break;
 
       case 'update':
@@ -61,8 +57,6 @@ export async function POST(request: NextRequest) {
           }
         }
         break;
-
-
 
       case 'move':
         if (!data?.folder) {
@@ -92,7 +86,6 @@ export async function POST(request: NextRequest) {
         
         for (const id of ids) {
           try {
-            // Get current media to merge tags
             const media = await mediaService.getMediaById(id);
             if (!media) {
               errors.push(`Media ${id} not found`);
@@ -110,79 +103,47 @@ export async function POST(request: NextRequest) {
         }
         break;
 
-      case 'untag':
-        if (!data?.tags) {
-          return NextResponse.json(
-            { success: false, error: 'Tags data required for untagging operation' },
-            { status: 400 }
-          );
-        }
-        
+      case 'star':
         for (const id of ids) {
           try {
-            // Get current media to remove tags
-            const media = await mediaService.getMediaById(id);
-            if (!media) {
-              errors.push(`Media ${id} not found`);
-              continue;
-            }
-            
-            const existingTags = media.tags || [];
-            const tagsToRemove = data.tags;
-            const newTags = existingTags.filter(tag => !tagsToRemove.includes(tag));
-            
-            const updated = await mediaService.updateMedia(id, { tags: newTags });
-            results.push({ id, status: 'untagged', data: updated });
+            const updated = await mediaService.updateMedia(id, { starred: true });
+            results.push({ id, status: 'starred', data: updated });
           } catch (error) {
-            errors.push(`Failed to untag ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            errors.push(`Failed to star ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
         }
         break;
 
-      case 'publish':
+      case 'unstar':
         for (const id of ids) {
           try {
-            const updated = await mediaService.updateMedia(id, { isPublic: true });
-            results.push({ id, status: 'published', data: updated });
+            const updated = await mediaService.updateMedia(id, { starred: false });
+            results.push({ id, status: 'unstarred', data: updated });
           } catch (error) {
-            errors.push(`Failed to publish ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          }
-        }
-        break;
-
-      case 'unpublish':
-        for (const id of ids) {
-          try {
-            const updated = await mediaService.updateMedia(id, { isPublic: false });
-            results.push({ id, status: 'unpublished', data: updated });
-          } catch (error) {
-            errors.push(`Failed to unpublish ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            errors.push(`Failed to unstar ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
         }
         break;
 
       default:
         return NextResponse.json(
-          { success: false, error: `Invalid action: ${action}` },
+          { success: false, error: `Unknown action: ${action}` },
           { status: 400 }
         );
     }
 
-    const isFullSuccess = errors.length === 0;
-    const message = isFullSuccess 
-      ? `Successfully processed ${results.length} items`
-      : `Processed ${results.length} items with ${errors.length} errors`;
-
     return NextResponse.json({
-      success: isFullSuccess,
+      success: true,
       data: {
         results,
         errors,
-        processed: results.length,
-        failed: errors.length,
-        total: ids.length
+        summary: {
+          total: ids.length,
+          successful: results.length,
+          failed: errors.length
+        }
       },
-      message
+      message: `Bulk ${action} completed`
     });
 
   } catch (error) {
@@ -190,7 +151,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+        error: error instanceof Error ? error.message : 'Bulk operation failed' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// ✅ NEW: Cleanup endpoint for orphaned files
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const session = await getServerSession(authOptions);
+    if (!session || !['admin', 'super_admin'].includes(session.user.role ?? '')) {
+      return NextResponse.json(
+        { success: false, error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const mediaService = new MediaService();
+    const cleanupResults = await mediaService.cleanupOrphanedFiles();
+
+    return NextResponse.json({
+      success: true,
+      data: cleanupResults,
+      message: `Cleanup completed: ${cleanupResults.cleaned.length} files removed`
+    });
+
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Cleanup failed' 
       },
       { status: 500 }
     );

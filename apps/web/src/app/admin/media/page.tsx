@@ -56,6 +56,10 @@ import {
   RefreshCw,
   Database,
   CloudIcon,
+  Filter,
+  SortAsc,
+  Layout,
+  Image as ImageLucide,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -63,9 +67,16 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-// Simple interfaces for frontend
+// Enhanced interfaces
 interface MediaFile {
   id: string;
   filename: string;
@@ -95,7 +106,7 @@ interface UploadProgress {
   id: string;
 }
 
-// Simple API helper functions (no class needed)
+// Enhanced API helper functions
 const mediaApi = {
   async fetchFiles(params?: {
     search?: string;
@@ -172,27 +183,10 @@ const mediaApi = {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return response.json();
   },
-
-  async searchFiles(query: string, filters?: any) {
-    const queryParams = new URLSearchParams();
-    queryParams.append("q", query);
-    if (filters?.type) queryParams.append("type", filters.type);
-    if (filters?.folder) queryParams.append("folder", filters.folder);
-    if (filters?.limit) queryParams.append("limit", filters.limit.toString());
-
-    const response = await fetch(`/api/media/search?${queryParams}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  },
-
-  async getStats() {
-    const response = await fetch("/api/media/stats");
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  },
 };
 
-export default function MediaPage() {
+export default function MediaLibraryPage() {
+  // State management
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -200,16 +194,21 @@ export default function MediaPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
+  const [sortBy, setSortBy] = useState("uploadedAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Upload states
   const [uploadDialog, setUploadDialog] = useState(false);
-  const [editDialog, setEditDialog] = useState(false);
-  const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Selection states
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load files
+  // Load files function
   const loadFiles = useCallback(async () => {
     try {
       setLoading(true);
@@ -224,7 +223,21 @@ export default function MediaPage() {
       });
 
       if (response.success) {
-        setFiles(response.data.files || []);
+        let sortedFiles = response.data.files || [];
+
+        // Sort files
+        sortedFiles.sort((a: MediaFile, b: MediaFile) => {
+          const aValue = a[sortBy as keyof MediaFile] ?? "";
+          const bValue = b[sortBy as keyof MediaFile] ?? "";
+
+          if (sortOrder === "asc") {
+            return aValue > bValue ? 1 : -1;
+          } else {
+            return aValue < bValue ? 1 : -1;
+          }
+        });
+
+        setFiles(sortedFiles);
       } else {
         setError(response.error || "Failed to load files");
       }
@@ -234,9 +247,9 @@ export default function MediaPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, selectedType, selectedFolder]);
+  }, [searchTerm, selectedType, selectedFolder, sortBy, sortOrder]);
 
-  // Upload files
+  // File upload handler
   const handleFileUpload = async (selectedFiles: FileList) => {
     const uploads: UploadProgress[] = Array.from(selectedFiles).map((file) => ({
       file,
@@ -250,7 +263,6 @@ export default function MediaPage() {
 
     for (const upload of uploads) {
       try {
-        // Update progress to show uploading
         setUploadProgress((prev) =>
           prev.map((p) => (p.id === upload.id ? { ...p, progress: 50 } : p))
         );
@@ -262,7 +274,6 @@ export default function MediaPage() {
         });
 
         if (response.success) {
-          // Update progress to complete
           setUploadProgress((prev) =>
             prev.map((p) =>
               p.id === upload.id
@@ -290,7 +301,6 @@ export default function MediaPage() {
       }
     }
 
-    // Reload files after upload
     setTimeout(() => {
       loadFiles();
       setUploadDialog(false);
@@ -298,12 +308,17 @@ export default function MediaPage() {
     }, 2000);
   };
 
-  // Delete file
+  // Delete file handler
   const handleDelete = async (fileId: string) => {
     try {
       const response = await mediaApi.deleteFile(fileId);
       if (response.success) {
         setFiles((prev) => prev.filter((f) => f.id !== fileId));
+        setSelectedFiles((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(fileId);
+          return newSet;
+        });
       } else {
         setError(response.error || "Delete failed");
       }
@@ -312,7 +327,7 @@ export default function MediaPage() {
     }
   };
 
-  // Star/unstar file
+  // Star/unstar file handler
   const handleToggleStar = async (fileId: string) => {
     try {
       const file = files.find((f) => f.id === fileId);
@@ -330,6 +345,28 @@ export default function MediaPage() {
     } catch (error) {
       console.error("Toggle star error:", error);
     }
+  };
+
+  // File selection handlers
+  const handleFileSelect = (fileId: string) => {
+    setSelectedFiles((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(fileId)) {
+        newSet.delete(fileId);
+      } else {
+        newSet.add(fileId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedFiles(new Set());
+    } else {
+      setSelectedFiles(new Set(files.map((f) => f.id)));
+    }
+    setSelectAll(!selectAll);
   };
 
   // Drag and drop handlers
@@ -352,7 +389,7 @@ export default function MediaPage() {
     }
   };
 
-  // Format file size
+  // Utility functions
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -361,21 +398,48 @@ export default function MediaPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // Get file icon
-  const getFileIcon = (type: string) => {
+  const getFileIcon = (type: string, mimeType: string) => {
     switch (type) {
       case "image":
-        return <ImageIcon className="h-8 w-8" />;
+        return <ImageIcon className="h-6 w-6 text-blue-500" />;
       case "video":
-        return <Video className="h-8 w-8" />;
+        return <Video className="h-6 w-6 text-purple-500" />;
       case "audio":
-        return <Music className="h-8 w-8" />;
+        return <Music className="h-6 w-6 text-green-500" />;
       case "document":
-        return <FileText className="h-8 w-8" />;
+        return <FileText className="h-6 w-6 text-orange-500" />;
       case "archive":
-        return <Archive className="h-8 w-8" />;
+        return <Archive className="h-6 w-6 text-gray-500" />;
       default:
-        return <FileText className="h-8 w-8" />;
+        return <FileText className="h-6 w-6 text-gray-400" />;
+    }
+  };
+
+  const renderFileThumbnail = (file: MediaFile) => {
+    if (file.type === "image") {
+      return (
+        <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
+          <img
+            src={file.thumbnailUrl || file.url}
+            alt={file.alt || file.originalName}
+            className="w-full h-full object-cover transition-transform hover:scale-105"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = "none";
+              target.nextElementSibling?.classList.remove("hidden");
+            }}
+          />
+          <div className="hidden w-full h-full flex items-center justify-center bg-gray-100">
+            {getFileIcon(file.type, file.mimeType)}
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="w-full h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
+          {getFileIcon(file.type, file.mimeType)}
+        </div>
+      );
     }
   };
 
@@ -385,203 +449,432 @@ export default function MediaPage() {
   }, [loadFiles]);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Media Library</h1>
-          <p className="text-muted-foreground">
-            Manage your files, images, and documents
-          </p>
-        </div>
-        <Button onClick={() => setUploadDialog(true)}>
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Files
-        </Button>
-      </div>
+    <TooltipProvider>
+      <div
+        className="min-h-screen bg-gray-50/30 p-6 space-y-6"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Enhanced Header */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Media Library
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage your files, images, and documents with professional tools
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setViewMode(viewMode === "grid" ? "list" : "grid")
+                }
+              >
+                {viewMode === "grid" ? (
+                  <List className="h-4 w-4" />
+                ) : (
+                  <Grid3X3 className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                onClick={() => setUploadDialog(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Files
+              </Button>
+            </div>
+          </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search files..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Enhanced Filters and Controls */}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Search */}
+            <div className="flex-1 min-w-64">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search files by name, tags, or description..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* File Type Filter */}
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-40">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="image">Images</SelectItem>
+                <SelectItem value="video">Videos</SelectItem>
+                <SelectItem value="audio">Audio</SelectItem>
+                <SelectItem value="document">Documents</SelectItem>
+                <SelectItem value="archive">Archives</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <SortAsc className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="uploadedAt">Upload Date</SelectItem>
+                <SelectItem value="filename">Name</SelectItem>
+                <SelectItem value="size">Size</SelectItem>
+                <SelectItem value="type">Type</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Sort Order */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            >
+              {sortOrder === "asc" ? "↑" : "↓"}
+            </Button>
+
+            {/* Bulk Actions */}
+            {selectedFiles.size > 0 && (
+              <div className="flex items-center gap-2 ml-auto">
+                <Badge variant="secondary">{selectedFiles.size} selected</Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedFiles(new Set())}
+                >
+                  Clear
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Actions <MoreVertical className="h-4 w-4 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem className="text-destructive">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Selected
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
           </div>
         </div>
 
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="File type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="image">Images</SelectItem>
-            <SelectItem value="video">Videos</SelectItem>
-            <SelectItem value="audio">Audio</SelectItem>
-            <SelectItem value="document">Documents</SelectItem>
-            <SelectItem value="archive">Archives</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Drag and Drop Overlay */}
+        {isDragOver && (
+          <div className="fixed inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-8 shadow-lg border-2 border-dashed border-blue-500">
+              <Upload className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+              <p className="text-lg font-medium text-gray-900">
+                Drop files here to upload
+              </p>
+            </div>
+          </div>
+        )}
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-          >
-            <Grid3X3 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+              <span className="text-gray-600">Loading media files...</span>
+            </div>
+          </div>
+        )}
 
-      {/* Error Display */}
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md">
-          {error}
-        </div>
-      )}
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <p className="text-red-700">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadFiles}
+                className="ml-auto"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Loading files...</span>
-        </div>
-      )}
+        {/* Files Grid/List */}
+        {!loading && files.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            {/* Select All */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={handleSelectAll}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm text-gray-600">
+                  {files.length} files (
+                  {formatFileSize(files.reduce((sum, f) => sum + f.size, 0))}{" "}
+                  total)
+                </span>
+              </div>
+            </div>
 
-      {/* Files Grid/List */}
-      {!loading && (
-        <div
-          className={
-            viewMode === "grid"
-              ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-              : "space-y-2"
-          }
-        >
-          {files.map((file) => (
-            <Card
-              key={file.id}
-              className="hover:shadow-md transition-all duration-200 cursor-pointer"
-            >
-              {viewMode === "grid" ? (
-                <>
-                  <div className="relative aspect-video bg-muted/50 rounded-t-lg overflow-hidden">
-                    {file.type === "image" && file.thumbnailUrl ? (
-                      <img
-                        src={file.thumbnailUrl}
-                        alt={file.alt || file.originalName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
-                        {getFileIcon(file.type)}
-                      </div>
-                    )}
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {files.map((file) => (
+                  <Card
+                    key={file.id}
+                    className={`group hover:shadow-lg transition-all duration-200 cursor-pointer ${
+                      selectedFiles.has(file.id)
+                        ? "ring-2 ring-blue-500 bg-blue-50"
+                        : ""
+                    }`}
+                    onClick={() => handleFileSelect(file.id)}
+                  >
+                    <CardContent className="p-3">
+                      {/* Thumbnail */}
+                      <div className="relative mb-3">
+                        {renderFileThumbnail(file)}
 
-                    <div className="absolute top-2 right-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="secondary" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            onClick={() => handleToggleStar(file.id)}
-                          >
-                            {file.starred ? (
-                              <>
-                                <StarOff className="h-4 w-4 mr-2" />
-                                Remove from favorites
-                              </>
-                            ) : (
-                              <>
-                                <Star className="h-4 w-4 mr-2" />
-                                Add to favorites
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleDelete(file.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                        {/* Overlay controls */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <div className="flex items-center gap-2">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Preview</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Download</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
 
-                    <div className="absolute top-2 left-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {file.type}
-                      </Badge>
-                    </div>
+                        {/* Selection checkbox */}
+                        <div className="absolute top-2 left-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedFiles.has(file.id)}
+                            onChange={() => handleFileSelect(file.id)}
+                            className="rounded border-gray-300 bg-white/90 backdrop-blur-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
 
-                    {file.starred && (
-                      <div className="absolute top-2 right-12">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                      </div>
-                    )}
-                  </div>
-
-                  <CardContent className="p-3">
-                    <div className="space-y-2">
-                      <p
-                        className="text-sm font-medium truncate"
-                        title={file.originalName}
-                      >
-                        {file.originalName}
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-muted-foreground">
-                        <span>{formatFileSize(file.size)}</span>
-                        {file.dimensions && (
-                          <span>
-                            {file.dimensions.width}×{file.dimensions.height}
-                          </span>
+                        {/* Star indicator */}
+                        {file.starred && (
+                          <div className="absolute top-2 right-2">
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </CardContent>
-                </>
-              ) : (
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="text-muted-foreground">
-                      {getFileIcon(file.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {file.originalName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatFileSize(file.size)} • {file.type}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {file.starred && (
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
+
+                      {/* File info */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          {getFileIcon(file.type, file.mimeType)}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="text-sm font-medium truncate">
+                                {file.originalName}
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent>{file.originalName}</TooltipContent>
+                          </Tooltip>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>{formatFileSize(file.size)}</span>
+                          {file.dimensions && (
+                            <span>
+                              {file.dimensions.width}×{file.dimensions.height}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Tags */}
+                        {file.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {file.tags.slice(0, 2).map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                            {file.tags.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{file.tags.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between pt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleStar(file.id);
+                            }}
+                            className="h-6 px-2"
+                          >
+                            {file.starred ? (
+                              <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                            ) : (
+                              <StarOff className="h-3 w-3" />
+                            )}
+                          </Button>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy URL
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(file.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              /* List View */
+              <div className="space-y-2">
+                {files.map((file) => (
+                  <div
+                    key={file.id}
+                    className={`flex items-center gap-4 p-3 rounded-lg border hover:bg-gray-50 transition-colors ${
+                      selectedFiles.has(file.id)
+                        ? "bg-blue-50 border-blue-200"
+                        : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles.has(file.id)}
+                      onChange={() => handleFileSelect(file.id)}
+                      className="rounded border-gray-300"
+                    />
+
+                    <div className="w-12 h-12 flex-shrink-0">
+                      {file.type === "image" ? (
+                        <img
+                          src={file.thumbnailUrl || file.url}
+                          alt={file.alt || file.originalName}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 rounded flex items-center justify-center">
+                          {getFileIcon(file.type, file.mimeType)}
+                        </div>
                       )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium truncate">
+                          {file.originalName}
+                        </p>
+                        {file.starred && (
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {formatFileSize(file.size)} • {file.mimeType}
+                        {file.dimensions &&
+                          ` • ${file.dimensions.width}×${file.dimensions.height}`}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{file.type}</Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Preview
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleToggleStar(file.id)}
                           >
@@ -609,108 +902,109 @@ export default function MediaPage() {
                       </DropdownMenu>
                     </div>
                   </div>
-                </CardContent>
-              )}
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && files.length === 0 && (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-            <HardDrive className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium mb-2">No files found</h3>
-          <p className="text-muted-foreground mb-4">
-            Upload some files to get started
-          </p>
-          <Button onClick={() => setUploadDialog(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Files
-          </Button>
-        </div>
-      )}
-
-      {/* Upload Dialog */}
-      <Dialog open={uploadDialog} onOpenChange={setUploadDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Upload Files</DialogTitle>
-            <DialogDescription>
-              Select files to upload to your media library
-            </DialogDescription>
-          </DialogHeader>
-
-          {uploadProgress.length > 0 ? (
-            <div className="space-y-4">
-              {uploadProgress.map((upload) => (
-                <div key={upload.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium truncate">
-                      {upload.file.name}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {upload.status === "complete" && (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      )}
-                      {upload.status === "error" && (
-                        <AlertCircle className="h-4 w-4 text-red-500" />
-                      )}
-                      {upload.status === "uploading" && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      )}
-                    </div>
-                  </div>
-                  <Progress value={upload.progress} />
-                  {upload.error && (
-                    <p className="text-sm text-red-500">{upload.error}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={(e) => {
-                  if (e.target.files?.length) {
-                    handleFileUpload(e.target.files);
-                  }
-                }}
-                multiple
-                accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-                className="hidden"
-              />
-
-              <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  isDragOver
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <CloudIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-lg font-medium mb-2">
-                  {isDragOver
-                    ? "Drop files here"
-                    : "Choose files or drag them here"}
-                </p>
-                <p className="text-sm text-gray-500 mb-4">
-                  Supports images, videos, audio, documents up to 10MB
-                </p>
-                <Button>Select Files</Button>
+                ))}
               </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+            )}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && files.length === 0 && (
+          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+            <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <HardDrive className="h-12 w-12 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No files found
+            </h3>
+            <p className="text-gray-500 mb-6">
+              {searchTerm || selectedType !== "all"
+                ? "Try adjusting your search filters"
+                : "Upload some files to get started"}
+            </p>
+            <Button
+              onClick={() => setUploadDialog(true)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Files
+            </Button>
+          </div>
+        )}
+
+        {/* Upload Dialog */}
+        <Dialog open={uploadDialog} onOpenChange={setUploadDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Upload Files</DialogTitle>
+              <DialogDescription>
+                Select or drag files to upload to your media library
+              </DialogDescription>
+            </DialogHeader>
+
+            {uploadProgress.length > 0 ? (
+              <div className="space-y-4">
+                {uploadProgress.map((upload) => (
+                  <div key={upload.id} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="truncate">{upload.file.name}</span>
+                      <span className="text-muted-foreground">
+                        {upload.status === "complete"
+                          ? "Complete"
+                          : `${upload.progress}%`}
+                      </span>
+                    </div>
+                    <Progress value={upload.progress} className="h-2" />
+                    {upload.error && (
+                      <p className="text-sm text-red-600">{upload.error}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-lg font-medium text-gray-900 mb-2">
+                    Choose files or drag them here
+                  </p>
+                  <p className="text-gray-500">
+                    Support for images, videos, documents, and more
+                  </p>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleFileUpload(e.target.files);
+                    }
+                  }}
+                />
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setUploadDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={() => fileInputRef.current?.click()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Select Files
+                  </Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
   );
 }
