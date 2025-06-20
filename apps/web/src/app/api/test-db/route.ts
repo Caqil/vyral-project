@@ -1,5 +1,5 @@
+import { Database } from '@vyral/core';
 import { NextRequest, NextResponse } from 'next/server';
-import { Database } from "node_modules/@vyral/core/src";
 
 export async function GET(request: NextRequest) {
   try {

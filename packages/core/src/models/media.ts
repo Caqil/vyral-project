@@ -86,7 +86,12 @@ const MediaSchema = createBaseSchema({
     type: Schema.Types.ObjectId,
     ref: 'MediaFolder'
   },
+
   tags: [String],
+  starred: {           // 🆕 ADD THIS FIELD
+    type: Boolean,
+    default: false
+  },
   isPublic: {
     type: Boolean,
     default: true
@@ -111,6 +116,7 @@ MediaSchema.index({ mimeType: 1 });
 MediaSchema.index({ uploadedBy: 1 });
 MediaSchema.index({ folder: 1 });
 MediaSchema.index({ tags: 1 });
+MediaSchema.index({ starred: 1 }); 
 MediaSchema.index({ title: 'text', alt: 'text', description: 'text' });
 
 // Virtual for file type

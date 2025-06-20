@@ -59,7 +59,33 @@ export class MediaService extends BaseService<MediaDocument> {
 
     return media;
   }
+async getStarredMedia(
+  userId?: string,
+  pagination?: PaginationParams
+): Promise<PaginationResult<MediaDocument>> {
+  const filter: FilterQuery<MediaDocument> = { starred: true };
+  
+  if (userId) {
+    filter.uploadedBy = userId;
+  }
 
+  const populateOptions = {
+    populate: [
+      { path: 'uploadedBy', select: 'displayName username avatar' },
+      { path: 'folder', select: 'name slug path' }
+    ]
+  };
+
+  return await this.findMany(filter, pagination, populateOptions);
+}
+
+async toggleStarred(id: string): Promise<MediaDocument> {
+  const media = await this.findByIdOrThrow(id);
+  const newStarredState = !media.starred;
+  
+  // ✅ Pass simple boolean value
+  return await this.updateMedia(id, { starred: newStarredState });
+}
   async getMediaByFilename(filename: string): Promise<MediaDocument | null> {
     return await this.findOne({ filename });
   }

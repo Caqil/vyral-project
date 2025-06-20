@@ -19,6 +19,7 @@ export interface Media extends BaseEntity {
   uploadedBy: string;
   folder?: string;
   tags: string[];
+  starred?: boolean;
   isPublic: boolean;
   downloadCount: number;
   metadata: Metadata;
@@ -71,6 +72,7 @@ export const MediaSchema = z.object({
   uploadedBy: z.string(),
   folder: z.string().optional(),
   tags: z.array(z.string()),
+  starred: z.boolean().default(false).optional(),
   isPublic: z.boolean().default(true),
   metadata: z.record(z.any()).optional()
 });
